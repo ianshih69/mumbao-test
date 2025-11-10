@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 
 /**
@@ -26,9 +26,6 @@ export default function GuestIntroCarousel() {
   );
 
   const trackRef = useRef<HTMLDivElement | null>(null);
-  
-  // 當前顯示的卡片索引
-  const [currentIndex, setCurrentIndex] = useState(0);
 
   // ----- Drag-to-scroll with momentum -----
   const isDown = useRef(false);
@@ -180,19 +177,78 @@ export default function GuestIntroCarousel() {
       innerDiv.classList.add('snap-x', 'snap-mandatory');
     }
     
-    // 判斷是否有移動（降低閾值，確保小移動也能換圖，參考 sunny85.yibnb.net）
-    const hasMoved = totalMoveDistance.current > 1; // 降低到 1px，讓極小移動也能換圖
+    // 判斷是否有移動（只要有移動就換圖，不會彈回）
+    const hasMoved = totalMoveDistance.current > 0.5; // 0.5px 閾值，避免純點擊被誤判
     
     stopMomentum();
     snapEnabled.current = true;
     
-    // 只要有移動，就移動到下一張圖（參考 sunny85.yibnb.net 的行為）
+    // 只要有移動，就移動到下一張圖（不會彈回）
     if (hasMoved) {
-      // 如果速度足夠大，啟動慣性動畫（慣性動畫結束後會自動 snap）
-      if (Math.abs(vX.current) > 0.1) { // 降低速度閾值，讓小移動也能觸發慣性
-        momentum();
+      // 計算移動方向
+      const scrollDelta = el.scrollLeft - scrollStart.current;
+      const firstCard = el.querySelector('article');
+      if (firstCard) {
+        const cardWidth = firstCard.getBoundingClientRect().width;
+        const gap = 30;
+        const snapStep = cardWidth + gap;
+        const startIndex = Math.round(scrollStart.current / snapStep);
+        
+        // 根據移動方向決定下一張或上一張（只要有移動就換圖）
+        let targetIndex = startIndex;
+        if (Math.abs(scrollDelta) > 0) {
+          // 只要有移動，根據方向決定
+          if (scrollDelta < 0) {
+            // 向右滑（scrollLeft 減少），下一張
+            targetIndex = startIndex + 1;
+          } else {
+            // 向左滑（scrollLeft 增加），上一張
+            targetIndex = startIndex - 1;
+          }
+        }
+        
+        // 確保索引在有效範圍內
+        const maxIndex = Math.floor((el.scrollWidth - el.clientWidth) / snapStep);
+        targetIndex = Math.max(0, Math.min(targetIndex, maxIndex));
+        
+        // 確保不會回到原位置（至少移動一張）
+        if (targetIndex === startIndex && Math.abs(scrollDelta) > 0) {
+          // 如果計算出來還是原位置，但確實有移動，強制移動一張
+          if (scrollDelta < 0) {
+            targetIndex = Math.min(startIndex + 1, maxIndex);
+          } else {
+            targetIndex = Math.max(startIndex - 1, 0);
+          }
+        }
+        
+        const targetScroll = targetIndex * snapStep;
+        
+        // 如果速度足夠大，啟動慣性動畫（慣性動畫結束後會自動 snap）
+        if (Math.abs(vX.current) > 0.05) {
+          momentum();
+        } else {
+          // 速度太小，直接使用線性動畫 snap 到目標位置（確保換圖）
+          el.style.scrollBehavior = 'auto';
+          const distance = Math.abs(targetScroll - el.scrollLeft);
+          const duration = Math.max(300, Math.min(600, distance * 0.6));
+          const startTime = performance.now();
+          const startScrollPos = el.scrollLeft;
+          
+          const animate = (currentTime: number) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const currentScrollPos = startScrollPos + (targetScroll - startScrollPos) * progress;
+            el.scrollLeft = currentScrollPos;
+            
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            }
+          };
+          
+          requestAnimationFrame(animate);
+        }
       } else {
-        // 速度太小，直接使用線性動畫 snap 到下一張
+        // 如果找不到卡片，使用原來的 snap 邏輯
         el.style.scrollBehavior = 'auto';
         snapToNearest();
       }
@@ -231,48 +287,6 @@ export default function GuestIntroCarousel() {
     }
   };
 
-  // 監聽滾動事件，更新當前索引
-  useEffect(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    
-    const updateCurrentIndex = () => {
-      const firstCard = el.querySelector('article');
-      if (!firstCard) return;
-      
-      const cardWidth = firstCard.getBoundingClientRect().width;
-      const gap = 30;
-      const snapStep = cardWidth + gap;
-      const currentScroll = el.scrollLeft;
-      const index = Math.round(currentScroll / snapStep);
-      setCurrentIndex(index);
-    };
-    
-    el.addEventListener('scroll', updateCurrentIndex, { passive: true });
-    updateCurrentIndex(); // 初始化
-    
-    return () => {
-      el.removeEventListener('scroll', updateCurrentIndex);
-    };
-  }, []);
-  
-  // 點擊圓點跳轉到對應卡片
-  const goToSlide = (index: number) => {
-    const el = trackRef.current;
-    if (!el) return;
-    
-    const firstCard = el.querySelector('article');
-    if (!firstCard) return;
-    
-    const cardWidth = firstCard.getBoundingClientRect().width;
-    const gap = 30;
-    const snapStep = cardWidth + gap;
-    const targetScroll = index * snapStep;
-    
-    // 使用平滑滾動
-    el.scrollTo({ left: targetScroll, behavior: 'smooth' });
-  };
-  
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -287,24 +301,6 @@ export default function GuestIntroCarousel() {
           <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">房客介紹</h2>
           <p className="text-sm md:text-base text-zinc-600 dark:text-zinc-400 mt-1">按住圖片拖曳即可左右滑動</p>
         </header>
-
-        {/* 圓點導覽 */}
-        <div className="mb-4 flex justify-center items-center pointer-events-auto">
-          <div className="flex">
-            {images.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`rounded-full transition-all duration-200 mx-1.5 ${
-                  index === currentIndex
-                    ? 'w-2.5 h-2.5 bg-white scale-110'
-                    : 'w-2.5 h-2.5 bg-neutral-400/70 hover:bg-neutral-400/90'
-                }`}
-                aria-label={`跳轉到第 ${index + 1} 張圖片`}
-              />
-            ))}
-          </div>
-        </div>
 
         <div
           ref={trackRef}
@@ -333,13 +329,13 @@ export default function GuestIntroCarousel() {
           `}</style>
 
           <div 
-            className="flex gap-[30px] snap-x snap-mandatory touch-pan-x select-none cursor-grab active:cursor-grabbing"
+            className="flex gap-[30px] snap-x snap-mandatory touch-pan-x select-none cursor-grab active:cursor-grabbing px-4"
             style={{ willChange: 'transform' }} // 性能優化
           >
             {images.map((src, i) => (
               <article
                 key={src}
-                className="snap-start rounded-2xl shadow-sm ring-1 ring-black/5 bg-white/70 backdrop-blur-sm overflow-hidden flex-shrink-0 basis-full sm:basis-[calc((100%-30px)/2)] lg:basis-[calc((100%-60px)/3)]"
+                className="snap-start shadow-sm ring-1 ring-black/5 bg-white/70 backdrop-blur-sm overflow-hidden flex-shrink-0 basis-full sm:basis-[calc((100%-30px)/2)] lg:basis-[calc((100%-60px)/3)]"
                 style={{ 
                   pointerEvents: 'auto', // 確保可以接收事件
                   userSelect: 'none', // 防止選取
