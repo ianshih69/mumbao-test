@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 
 /**
@@ -26,6 +26,9 @@ export default function GuestIntroCarousel() {
   );
 
   const trackRef = useRef<HTMLDivElement | null>(null);
+  
+  // 當前顯示的卡片索引
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   // ----- Drag-to-scroll with momentum -----
   const isDown = useRef(false);
@@ -59,35 +62,7 @@ export default function GuestIntroCarousel() {
     
     // 計算最近的 snap 位置
     const currentScroll = el.scrollLeft;
-    const currentIndex = Math.round(currentScroll / snapStep);
-    
-    // 根據移動方向決定下一張或上一張
-    // 如果向右移動（vX < 0，因為我們是減去 vX），顯示下一張
-    // 如果向左移動（vX > 0），顯示上一張
-    let targetIndex = currentIndex;
-    if (Math.abs(vX.current) > 0.01) {
-      // 有速度，根據方向決定
-      if (vX.current < 0) {
-        // 向右滑，下一張
-        targetIndex = currentIndex + 1;
-      } else {
-        // 向左滑，上一張
-        targetIndex = currentIndex - 1;
-      }
-    } else {
-      // 沒有速度，根據位置決定（如果超過一半，下一張；否則上一張）
-      const offset = currentScroll % snapStep;
-      if (offset > snapStep / 2) {
-        targetIndex = currentIndex + 1;
-      } else {
-        targetIndex = currentIndex;
-      }
-    }
-    
-    // 確保索引在有效範圍內
-    const maxIndex = Math.floor((el.scrollWidth - el.clientWidth) / snapStep);
-    targetIndex = Math.max(0, Math.min(targetIndex, maxIndex));
-    
+    const targetIndex = Math.round(currentScroll / snapStep);
     const targetScroll = targetIndex * snapStep;
     
     // 如果已經在目標位置，不需要動畫
@@ -256,6 +231,48 @@ export default function GuestIntroCarousel() {
     }
   };
 
+  // 監聽滾動事件，更新當前索引
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    
+    const updateCurrentIndex = () => {
+      const firstCard = el.querySelector('article');
+      if (!firstCard) return;
+      
+      const cardWidth = firstCard.getBoundingClientRect().width;
+      const gap = 30;
+      const snapStep = cardWidth + gap;
+      const currentScroll = el.scrollLeft;
+      const index = Math.round(currentScroll / snapStep);
+      setCurrentIndex(index);
+    };
+    
+    el.addEventListener('scroll', updateCurrentIndex, { passive: true });
+    updateCurrentIndex(); // 初始化
+    
+    return () => {
+      el.removeEventListener('scroll', updateCurrentIndex);
+    };
+  }, []);
+  
+  // 點擊圓點跳轉到對應卡片
+  const goToSlide = (index: number) => {
+    const el = trackRef.current;
+    if (!el) return;
+    
+    const firstCard = el.querySelector('article');
+    if (!firstCard) return;
+    
+    const cardWidth = firstCard.getBoundingClientRect().width;
+    const gap = 30;
+    const snapStep = cardWidth + gap;
+    const targetScroll = index * snapStep;
+    
+    // 使用平滑滾動
+    el.scrollTo({ left: targetScroll, behavior: 'smooth' });
+  };
+  
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -270,6 +287,24 @@ export default function GuestIntroCarousel() {
           <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">房客介紹</h2>
           <p className="text-sm md:text-base text-zinc-600 dark:text-zinc-400 mt-1">按住圖片拖曳即可左右滑動</p>
         </header>
+
+        {/* 圓點導覽 */}
+        <div className="mb-4 flex justify-center items-center pointer-events-auto">
+          <div className="flex">
+            {images.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`rounded-full transition-all duration-200 mx-1.5 ${
+                  index === currentIndex
+                    ? 'w-2.5 h-2.5 bg-white scale-110'
+                    : 'w-2.5 h-2.5 bg-neutral-400/70 hover:bg-neutral-400/90'
+                }`}
+                aria-label={`跳轉到第 ${index + 1} 張圖片`}
+              />
+            ))}
+          </div>
+        </div>
 
         <div
           ref={trackRef}
