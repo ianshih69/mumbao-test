@@ -13,14 +13,10 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": ["./*"]
-    }
+    "plugins": [{ "name": "next" }],
+    "paths": { "@/*": ["./*"] },
+
+    "typeRoots": ["./types", "./node_modules/@types"]   // ← 新增這行
   },
   "include": [
     "next-env.d.ts",
