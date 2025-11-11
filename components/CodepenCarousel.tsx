@@ -3,36 +3,48 @@
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import $ from "jquery";
-import "./CodepenCarousel.css"; // 你的自訂樣式（含 dots 替代樣式）
+import "./CodepenCarousel.css";
 
 export default function CodepenCarousel() {
   const inited = useRef(false);
 
   useEffect(() => {
-    // 確保 jQuery 掛到 window，供 owl.carousel 使用
+    // 讓 owl.carousel 能找到 jQuery
     (window as any).jQuery = $;
     (window as any).$ = $;
 
     const boot = async () => {
       if (inited.current) return;
 
-      // 動態載入 owl.carousel（只在瀏覽器端執行，避免 SSR 出錯）
+      // 僅在瀏覽器端載入
       await import("owl.carousel");
 
       const $owl = $(".loop");
       if (!$owl.length) return;
 
-      // 與你 CodePen 同設定
       $owl.owlCarousel({
+        loop: true,
         autoplay: true,
         autoplayHoverPause: true,
         autoplayTimeout: 3000,
         autoplaySpeed: 800,
-        center: true,
-        items: 1.4,
-        stagePadding: 15,
-        loop: true,
         margin: 15,
+
+        // 手機～中等：保留你原本「置中、左右露一點」
+        center: true,
+        stagePadding: 15,
+        items: 1.2,
+
+        // 斷點：最大頁面顯示「完整三張」
+        responsive: {
+          640: { items: 1.6, stagePadding: 20, center: true },
+          768: { items: 2.0, stagePadding: 24, center: true },
+          1024: { items: 2.4, stagePadding: 24, center: true },
+          1280: { items: 3, stagePadding: 0, center: false },  // ★ 三張、取消置中與 padding
+          1536: { items: 3, stagePadding: 0, center: false },  // ★ 三張
+        },
+
+        // 需要的話可留著動畫，不影響三張滿版
         animateOut: "slide-up",
         animateIn: "slide-down",
       });
@@ -67,13 +79,13 @@ export default function CodepenCarousel() {
                   {num}
                 </span>
 
-                {/* 圖片：/images/page3/page3-1.webp ~ 5.webp */}
+                {/* 圖片：/images/page3/page3-1.webp ~ page3-5.webp */}
                 <div className="relative w-full" style={{ aspectRatio: "6 / 7" }}>
                   <Image
                     src={`/images/page3/page3-${num}.webp`}
                     alt={`房客介紹 ${num}`}
                     fill
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 70vw, 33vw"
                     className="object-cover rounded-xl"
                     priority={num <= 2}
                   />

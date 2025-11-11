@@ -201,3 +201,27 @@ html {
   background: none !important;
   box-shadow: none !important;
 }
+
+/* === 大螢幕：顯示完整三張，取消 CodePen 的縮放/陰影 === */
+@media (min-width: 1280px) {
+  /* Owl 已把寬度切成 3 等份；把卡片還原成 1:1 尺寸與不透明 */
+  .owl-carousel.loop .owl-item .card {
+    transform: none !important;
+    opacity: 1 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* 取消「只讓中間一張放大」的規則，三張都一樣大 */
+  .owl-carousel.loop .center .card,
+  .owl-carousel.loop .active .card {
+    transform: none !important;
+    opacity: 1 !important;
+    box-shadow: none !important;
+  }
+
+  /* 不需要額外外距，避免看起來被裁切 */
+  .owl-carousel.loop .owl-stage {
+    margin: 0 !important;
+  }
+}

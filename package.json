@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "embla-carousel-autoplay": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
     "next": "16.0.1",
     "owl.carousel": "^2.3.4",
     "react": "19.2.0",
