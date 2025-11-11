@@ -105,7 +105,7 @@ export default function CodepenCarousel() {
                 </span>
 
                 {/* 圖片：/images/page3/page3-1.webp ~ page3-5.webp */}
-                <div className="relative w-full" style={{ aspectRatio: "6 / 7" }}>
+                <div className="relative w-full" style={{ aspectRatio: "314 / 367" }}>
                   <Image
                     src={`/images/page3/page3-${num}.webp`}
                     alt={`房客介紹 ${num}`}
@@ -113,6 +113,7 @@ export default function CodepenCarousel() {
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 70vw, 33vw"
                     className="object-cover rounded-xl"
                     priority={num <= 2}
+                    draggable={false}
                   />
                 </div>
               </div>
