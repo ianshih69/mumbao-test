@@ -28,7 +28,7 @@ export default function CodepenCarousel() {
         autoplayHoverPause: true,
         autoplayTimeout: 3000,
         autoplaySpeed: 800,
-        margin: 15,
+        margin: 20,
 
         // 手機～中等：保留你原本「置中、左右露一點」
         center: true,
@@ -37,17 +37,42 @@ export default function CodepenCarousel() {
 
         // 斷點：最大頁面顯示「完整三張」
         responsive: {
-          640: { items: 1.6, stagePadding: 20, center: true },
-          768: { items: 2.0, stagePadding: 24, center: true },
-          1024: { items: 2.4, stagePadding: 24, center: true },
-          1280: { items: 3, stagePadding: 0, center: false },  // ★ 三張、取消置中與 padding
-          1536: { items: 3, stagePadding: 0, center: false },  // ★ 三張
+          640: { items: 1.6, stagePadding: 20, center: true, margin: 20 },
+          768: { items: 2.0, stagePadding: 24, center: true, margin: 20 },
+          1024: { items: 2.4, stagePadding: 24, center: true, margin: 20 },
+          1280: { items: 3, stagePadding: 0, center: false, margin: 20 },  // ★ 三張、取消置中與 padding
+          1536: { items: 3, stagePadding: 0, center: false, margin: 20 },  // ★ 三張
         },
 
         // 需要的話可留著動畫，不影響三張滿版
         animateOut: "slide-up",
         animateIn: "slide-down",
       });
+
+      // 強制設置間距為 20px - 使用多種方式確保生效
+      const forceMargin = () => {
+        $owl.find(".owl-item").each(function() {
+          const $item = $(this);
+          $item.css("margin-right", "20px");
+          $item.css("margin-left", "0");
+          $item.css("padding-right", "0");
+          $item.css("padding-left", "0");
+          // 也移除內部的 card 的 margin
+          $item.find(".card").css("margin-left", "0").css("margin-right", "0");
+        });
+      };
+
+      // 立即執行
+      forceMargin();
+
+      // 延遲執行（確保 OwlCarousel 初始化完成）
+      setTimeout(forceMargin, 100);
+      setTimeout(forceMargin, 300);
+
+      // 監聽 resize 和 update 事件
+      $owl.on("resized.owl.carousel", forceMargin);
+      $owl.on("refreshed.owl.carousel", forceMargin);
+      $owl.on("updated.owl.carousel", forceMargin);
 
       inited.current = true;
     };

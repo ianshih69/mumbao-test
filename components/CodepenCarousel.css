@@ -11,6 +11,17 @@ html {
   -webkit-transform: translateZ(0) scale(1, 1);
 }
 
+/* 直接控制圖片之間的間距 - 使用 CSS 變數以便動態調整 */
+.owl-item {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 確保 OwlCarousel 的 margin 設置生效 */
+.loop .owl-item {
+  margin-right: 0 !important;
+}
+
 .owl-wrapper {
   position: relative;
   height: 100vh;
@@ -31,13 +42,28 @@ html {
   display: flex;
   justify-content: center;
   height: 19em;
-  padding: 1em;
+  padding: 0;
   margin: 1em 0;
+  margin-left: 0;
+  margin-right: 0;
   border-radius: 4px;
   opacity: 0.7;
   transform: scale(0.87);
   transition: transform 0.4s 0.5s ease-out, opacity 1s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* 設置圖片之間的間距為 20px */
+.loop .owl-item {
+  margin-right: 20px !important;
+  margin-left: 0 !important;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+}
+
+.loop .owl-item .card {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 
 .active .card {
