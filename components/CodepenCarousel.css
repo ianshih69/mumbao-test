@@ -1,0 +1,203 @@
+html {
+  font-family: "Poppins";
+  margin: 0;
+  padding: 0;
+}
+
+.card,
+.owl-item {
+  transition: all 1s ease-out;
+  -webkit-backface-visibility: hidden;
+  -webkit-transform: translateZ(0) scale(1, 1);
+}
+
+.owl-wrapper {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.cards {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  padding: 4em 0;
+  background-color: #fefefe;
+}
+
+.card {
+  display: flex;
+  justify-content: center;
+  height: 19em;
+  padding: 1em;
+  margin: 1em 0;
+  border-radius: 4px;
+  opacity: 0.7;
+  transform: scale(0.87);
+  transition: transform 0.4s 0.5s ease-out, opacity 1s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.active .card {
+  box-shadow: 0 0px 1em rgba(0, 0, 0, 0.2);
+  transform: box-shadow 0.3s ease, transform 0.1s 0.4s ease-in, opacity 0.4s ease;
+}
+
+.card__content {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #fff;
+  opacity: 1;
+}
+
+.active .card__content {
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+
+.card__title {
+  display: inline-block;
+  font-size: 2em;
+  overflow: hidden;
+}
+
+.card__title span {
+  display: inline-block;
+  animation: slide-up 0.4s 0s ease both;
+}
+
+.center.active .card__title span,
+.center.active.cloned:last-child .card__title span {
+  opacity: 1;
+  animation: slide-down 0.4s 0.4s ease both;
+  transition: transform 0.3s 0.4s ease, opacity 0.3s ease;
+}
+
+.center .card {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.center .card:hover {
+  box-shadow: 0 8px 16px -5px rgba(0, 0, 0, 0.4);
+}
+
+.owl-item:nth-of-type(1n) .card {
+  background-color: #ff527b;
+}
+
+.owl-item:nth-of-type(2n) .card {
+  background-color: #ffcc8f;
+}
+
+.owl-item:nth-of-type(3n) .card {
+  background-color: #ff8f2f;
+}
+
+.owl-item:nth-of-type(4n) .card {
+  background-color: #2480fe;
+}
+
+.owl-theme .owl-dots .owl-dot span {
+  width: 4em;
+  height: 4px;
+  margin: 0 0.5em;
+  background: #d6d6d6;
+  display: block;
+  transition: opacity 0.2s ease;
+}
+
+.owl-theme .owl-dots .owl-dot.active span,
+.owl-theme .owl-dots .owl-dot:hover span {
+  background: #ff527b;
+}
+
+@keyframes slide-down {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -120%, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0%, 0);
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -120%, 0);
+  }
+}
+
+/* === 取代 owl.theme.default.css 的必要規則（無 hack 版） === */
+.owl-theme .owl-nav {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.owl-theme .owl-dots {
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.owl-theme .owl-dots .owl-dot {
+  display: inline-block;
+}
+
+.owl-theme .owl-dots .owl-dot span {
+  width: 10px;
+  height: 10px;
+  margin: 5px 7px;
+  background: #d6d6d6;
+  display: block;
+  border-radius: 30px;
+  transition: opacity 0.2s ease;
+}
+
+.owl-theme .owl-dots .owl-dot.active span,
+.owl-theme .owl-dots .owl-dot:hover span {
+  background: #ff527b; /* 這裡可以換成你的主色 */
+}
+
+/* ==== 移除卡片預設的粉紅背景與陰影 ==== */
+
+/* 把每張卡片背景清成透明 */
+.card {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 移除被 OwlCarousel 複製的 cloned 卡片的任何底色 */
+.owl-item,
+.owl-item.cloned,
+.owl-stage,
+.owl-stage-outer {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 移除 CodePen 原主題設定的彩色 nth-of-type 顏色 */
+.owl-item:nth-of-type(1n) .card,
+.owl-item:nth-of-type(2n) .card,
+.owl-item:nth-of-type(3n) .card,
+.owl-item:nth-of-type(4n) .card,
+.owl-item:nth-of-type(5n) .card {
+  background: transparent !important;
+}
+
+/* 若 OwlCarousel 產生左右陰影（多半是 box-shadow 或 overlay） */
+.owl-stage::before,
+.owl-stage::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  box-shadow: none !important;
+}

@@ -59,7 +59,13 @@ export default function GuestIntroCarousel() {
     
     // 計算最近的 snap 位置
     const currentScroll = el.scrollLeft;
-    const targetIndex = Math.round(currentScroll / snapStep);
+    let targetIndex = Math.round(currentScroll / snapStep);
+    
+    // 確保索引在有效範圍內
+    const maxScrollableIndex = Math.floor((el.scrollWidth - el.clientWidth) / snapStep);
+    const maxIndex = Math.min(maxScrollableIndex, images.length - 1);
+    targetIndex = Math.max(0, Math.min(targetIndex, maxIndex));
+    
     const targetScroll = targetIndex * snapStep;
     
     // 如果已經在目標位置，不需要動畫
@@ -92,20 +98,57 @@ export default function GuestIntroCarousel() {
   const momentum = () => {
     const el = trackRef.current;
     if (!el) return;
-    
+
     const now = performance.now();
     if (momentumStartTime.current === 0) {
       momentumStartTime.current = now;
     }
-    
+
     const dt = now - momentumStartTime.current;
     momentumStartTime.current = now;
-    
+
     // Friction / deceleration (調整為更平滑的減速)
     vX.current *= 0.94; // 0.92~0.96 之間，數值越大越滑順
     if (Math.abs(vX.current) < 0.08) {
       stopMomentum();
       momentumStartTime.current = 0;
+      
+      // 檢查是否在最後一張圖，如果是則回到最後一張圖的位置
+      const firstCard = el.querySelector('article');
+      if (firstCard) {
+        const cardWidth = firstCard.getBoundingClientRect().width;
+        const gap = 30;
+        const snapStep = cardWidth + gap;
+        const currentScroll = el.scrollLeft;
+        const currentIndex = Math.round(currentScroll / snapStep);
+        const maxScrollableIndex = Math.floor((el.scrollWidth - el.clientWidth) / snapStep);
+        const maxIndex = Math.min(maxScrollableIndex, images.length - 1);
+        
+        // 如果當前索引接近或等於 maxIndex，確保回到最後一張圖的位置
+        if (Math.abs(currentIndex - maxIndex) <= 0.5 || currentIndex >= maxIndex) {
+          const targetScroll = maxIndex * snapStep;
+          el.style.scrollBehavior = 'auto';
+          const distance = Math.abs(targetScroll - currentScroll);
+          const duration = Math.max(300, Math.min(600, distance * 0.6));
+          const startTime = performance.now();
+          const startScroll = currentScroll;
+          
+          const animate = (currentTime: number) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const currentScrollPos = startScroll + (targetScroll - startScroll) * progress;
+            el.scrollLeft = currentScrollPos;
+            
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            }
+          };
+          
+          requestAnimationFrame(animate);
+          return;
+        }
+      }
+      
       // 使用線性動畫 snap 到最近位置
       el.style.scrollBehavior = 'auto';
       snapToNearest();
@@ -194,6 +237,45 @@ export default function GuestIntroCarousel() {
         const snapStep = cardWidth + gap;
         const startIndex = Math.round(scrollStart.current / snapStep);
         
+        // 計算最大可滾動索引（考慮視窗寬度和圖片數量）
+        const maxScrollableIndex = Math.floor((el.scrollWidth - el.clientWidth) / snapStep);
+        const maxIndex = Math.min(maxScrollableIndex, images.length - 1);
+        
+        // 如果是在最後一張圖（maxIndex），向右拖曳時允許拉到中間位置
+        // 但放開後要回到最後一張圖的位置（第三個位置）
+        // 檢查是否在最後一張圖，並且向右拖曳（scrollDelta < 0 表示向右）
+        // 使用更寬鬆的判斷：如果 startIndex 接近或等於 maxIndex
+        const isLastImage = Math.abs(startIndex - maxIndex) <= 0.5 || startIndex >= maxIndex;
+        if (isLastImage && scrollDelta < 0) {
+          // 在最後一張圖時向右拖曳，放開後回到最後一張圖的位置
+          const targetIndex = maxIndex;
+          const targetScroll = targetIndex * snapStep;
+          
+          // 停止慣性動畫，避免干擾
+          stopMomentum();
+          
+          // 使用線性動畫回到最後一張圖的位置
+          el.style.scrollBehavior = 'auto';
+          const distance = Math.abs(targetScroll - el.scrollLeft);
+          const duration = Math.max(300, Math.min(600, distance * 0.6));
+          const startTime = performance.now();
+          const startScrollPos = el.scrollLeft;
+          
+          const animate = (currentTime: number) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const currentScrollPos = startScrollPos + (targetScroll - startScrollPos) * progress;
+            el.scrollLeft = currentScrollPos;
+            
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            }
+          };
+          
+          requestAnimationFrame(animate);
+          return;
+        }
+        
         // 根據移動方向決定下一張或上一張（只要有移動就換圖）
         let targetIndex = startIndex;
         if (Math.abs(scrollDelta) > 0) {
@@ -208,7 +290,6 @@ export default function GuestIntroCarousel() {
         }
         
         // 確保索引在有效範圍內
-        const maxIndex = Math.floor((el.scrollWidth - el.clientWidth) / snapStep);
         targetIndex = Math.max(0, Math.min(targetIndex, maxIndex));
         
         // 確保不會回到原位置（至少移動一張）
@@ -223,8 +304,30 @@ export default function GuestIntroCarousel() {
         
         const targetScroll = targetIndex * snapStep;
         
-        // 如果速度足夠大，啟動慣性動畫（慣性動畫結束後會自動 snap）
-        if (Math.abs(vX.current) > 0.05) {
+        // 如果是在最後一張圖且向右拖曳，不啟動慣性動畫，直接回到最後一張圖位置
+        const isLastImage2 = Math.abs(startIndex - maxIndex) <= 0.5 || startIndex >= maxIndex;
+        if (isLastImage2 && scrollDelta < 0) {
+          // 直接回到最後一張圖的位置
+          el.style.scrollBehavior = 'auto';
+          const distance = Math.abs(targetScroll - el.scrollLeft);
+          const duration = Math.max(300, Math.min(600, distance * 0.6));
+          const startTime = performance.now();
+          const startScrollPos = el.scrollLeft;
+          
+          const animate = (currentTime: number) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const currentScrollPos = startScrollPos + (targetScroll - startScrollPos) * progress;
+            el.scrollLeft = currentScrollPos;
+            
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            }
+          };
+          
+          requestAnimationFrame(animate);
+        } else if (Math.abs(vX.current) > 0.05) {
+          // 如果速度足夠大，啟動慣性動畫（慣性動畫結束後會自動 snap）
           momentum();
         } else {
           // 速度太小，直接使用線性動畫 snap 到目標位置（確保換圖）
@@ -335,7 +438,7 @@ export default function GuestIntroCarousel() {
             {images.map((src, i) => (
               <article
                 key={src}
-                className="snap-start shadow-sm ring-1 ring-black/5 bg-white/70 backdrop-blur-sm overflow-hidden flex-shrink-0 basis-full sm:basis-[calc((100%-30px)/2)] lg:basis-[calc((100%-60px)/3)]"
+                className="snap-start shadow-sm ring-1 ring-black/5 bg-white/70 backdrop-blur-sm overflow-hidden flex-shrink-0 basis-full sm:basis-[calc((100%-30px)/2)] lg:basis-[calc((100%-60px)/3)] group cursor-pointer"
                 style={{ 
                   pointerEvents: 'auto', // 確保可以接收事件
                   userSelect: 'none', // 防止選取
@@ -351,6 +454,12 @@ export default function GuestIntroCarousel() {
                     priority={i < 3}
                     draggable={false}
                   />
+                  {/* Hover 遮罩層 */}
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
+                    <div className="bg-white/80 backdrop-blur-sm px-4 py-2 rounded text-black text-lg md:text-xl font-medium cursor-pointer">
+                      詳細內容+
+                    </div>
+                  </div>
                 </div>
               </article>
             ))}
