@@ -16,8 +16,8 @@ export default function CodepenCarousel() {
     const boot = async () => {
       if (inited.current) return;
 
-      // 僅在瀏覽器端載入
-      await import("owl.carousel");
+      // @ts-expect-error third-party lib has no official types; shimed in /types
+      await import("owl.carousel/dist/owl.carousel.js");
 
       const $owl = $(".loop");
       if (!$owl.length) return;

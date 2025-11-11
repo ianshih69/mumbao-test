@@ -1,10 +1,27 @@
 // types/third-party.d.ts
 
-// owl.carousel 沒有官方型別，宣告給 TS 避免報錯
-declare module "owl.carousel";
+// ★ 同時宣告兩個可被引用的名稱
+declare module "owl.carousel" {
+  const value: any;
+  export default value;
+}
+declare module "owl.carousel/dist/owl.carousel.js" {
+  const value: any;
+  export default value;
+}
 
-// 把 jQuery 掛到 window 的型別（我們在 useEffect 會賦值）
+// jQuery 會掛到 window（在 useEffect 內），補上型別
 interface Window {
   jQuery: JQueryStatic;
   $: JQueryStatic;
 }
+
+// 擴充 jQuery 介面：加入 owlCarousel / trigger
+declare global {
+  interface JQuery<TElement = HTMLElement> {
+    owlCarousel(options?: any): JQuery<TElement>;
+    trigger?(event: string, ...args: any[]): JQuery<TElement>;
+  }
+}
+
+export {};
