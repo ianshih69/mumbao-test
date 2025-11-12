@@ -1,5 +1,11 @@
+import Hero from "@/components/Hero";
 import NewsList from "@/components/news/NewsList";
 
 export default function Page() {
-  return <NewsList />;
+  return (
+    <>
+      <Hero />
+      <NewsList />
+    </>
+  );
 }
