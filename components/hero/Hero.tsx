@@ -1,11 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getCurrentHeroImage } from "@/lib/hero";
+import { getAllHeroImages } from "@/lib/hero";
 
 export default function Hero() {
   const [imageRatio, setImageRatio] = useState<number | null>(null);
-  const currentImage = getCurrentHeroImage();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const heroImages = getAllHeroImages();
+  const currentImage = heroImages[currentIndex];
+
+  // 每 5 秒切換圖片
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % heroImages.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
 
   useEffect(() => {
     // 動態獲取圖片尺寸
