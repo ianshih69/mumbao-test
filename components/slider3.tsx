@@ -17,15 +17,43 @@ const IMAGE_CONFIG = {
 } as const;
 
 // ===== 卡片數據配置 =====
-const cardData = Array.from({ length: IMAGE_CONFIG.count }, (_, index) => {
-  const num = index + 1;
-  return {
-    id: num,
-    name: `房客 ${num}`,
-    description: `這是第 ${num} 張房客介紹卡片`,
-    image: `${IMAGE_CONFIG.basePath}/page3-${num}.${IMAGE_CONFIG.format}`,
-  };
-});
+const cardData = [
+  {
+    id: 1,
+    name: "慢寶灣臥・世界百大建築",
+    title: "慢寶灣臥・世界百大建築",
+    date: "2022.11.08",
+    image: `${IMAGE_CONFIG.basePath}/page3-1.${IMAGE_CONFIG.format}`,
+  },
+  {
+    id: 2,
+    name: "慢寶生日獻禮",
+    title: "慢寶生日獻禮",
+    date: "2025.08.13",
+    image: `${IMAGE_CONFIG.basePath}/page3-2.${IMAGE_CONFIG.format}`,
+  },
+  {
+    id: 3,
+    name: "慢寶・晚餐",
+    title: "慢寶・晚餐",
+    date: "2025.08.01",
+    image: `${IMAGE_CONFIG.basePath}/page3-3.${IMAGE_CONFIG.format}`,
+  },
+  {
+    id: 4,
+    name: "慢寶，最新消息1",
+    title: "慢寶，最新消息1",
+    date: "2025.03.15",
+    image: `${IMAGE_CONFIG.basePath}/page3-4.${IMAGE_CONFIG.format}`,
+  },
+  {
+    id: 5,
+    name: "慢寶，最新消息2",
+    title: "慢寶，最新消息2",
+    date: "2025.03.10",
+    image: `${IMAGE_CONFIG.basePath}/page3-5.${IMAGE_CONFIG.format}`,
+  },
+];
 
 // ===== 組件 =====
 export default function Slider3() {
@@ -71,13 +99,13 @@ export default function Slider3() {
             {cardData.map((card) => (
               <SwiperSlide key={card.id}>
                 <div
-                  className="card group relative overflow-hidden cursor-pointer outline-none focus:outline-none focus-visible:ring-0"
+                  className="card group relative overflow-visible cursor-pointer outline-none focus:outline-none focus-visible:ring-0"
                   tabIndex={0}
                   aria-label={card.name}
                   style={{ WebkitTapHighlightColor: "transparent" }}
                 >
                   {/* 圖片本體 */}
-                  <div className="card-image relative w-full h-full transition-transform duration-300 will-change-transform group-hover:scale-[1.02] group-focus:scale-[1.02] group-focus-within:scale-[1.02]">
+                  <div className="card-image relative w-full transition-transform duration-300 will-change-transform group-hover:scale-[1.02] group-focus:scale-[1.02] group-focus-within:scale-[1.02] overflow-hidden">
                     <Image
                       src={card.image}
                       alt={card.name}
@@ -85,20 +113,30 @@ export default function Slider3() {
                       priority={card.id <= 2}
                       fill
                     />
+
+                    {/* 反黑遮罩（只在 hover / focus / focus-within 顯示） */}
+                    <div className="pointer-events-none absolute inset-0 bg-black/45 transition-opacity duration-200 ease-out opacity-0 group-hover:opacity-100 group-focus:opacity-100 group-focus-within:opacity-100" />
+
+                    {/* 中央白框 + 文字（覆蓋層內放可點擊的 <a>） */}
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center transition-opacity duration-200 ease-out opacity-0 group-hover:opacity-100 group-focus:opacity-100 group-focus-within:opacity-100">
+                      <a
+                        href="#"
+                        aria-label={card.name}
+                        className="pointer-events-auto border border-white text-white px-5 py-2 md:px-6 md:py-2.5 text-sm md:text-base tracking-widest select-none"
+                      >
+                        詳細內容 ＋
+                      </a>
+                    </div>
                   </div>
 
-                  {/* 反黑遮罩（只在 hover / focus / focus-within 顯示） */}
-                  <div className="pointer-events-none absolute inset-0 bg-black/45 transition-opacity duration-200 ease-out opacity-0 group-hover:opacity-100 group-focus:opacity-100 group-focus-within:opacity-100" />
-
-                  {/* 中央白框 + 文字（覆蓋層內放可點擊的 <a>） */}
-                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center transition-opacity duration-200 ease-out opacity-0 group-hover:opacity-100 group-focus:opacity-100 group-focus-within:opacity-100">
-                    <a
-                      href="#"
-                      aria-label={card.name}
-                      className="pointer-events-auto border border-white text-white px-5 py-2 md:px-6 md:py-2.5 text-sm md:text-base tracking-widest select-none"
-                    >
-                      詳細內容 ＋
-                    </a>
+                  {/* 圖片外部左下角文字（標題和日期） */}
+                  <div style={{ marginTop: "6px" }}>
+                    <div className="text-base md:text-lg font-medium mb-1 text-gray-800">
+                      {card.title}
+                    </div>
+                    <div className="text-sm md:text-base text-gray-600">
+                      {card.date}
+                    </div>
                   </div>
                 </div>
               </SwiperSlide>
@@ -147,7 +185,8 @@ export default function Slider3() {
           border-radius: 0;
           background-color: transparent;
           width: 100%;
-          height: 100%;
+          display: flex;
+          flex-direction: column;
         }
 
         .card:focus {
@@ -198,6 +237,15 @@ export default function Slider3() {
           left: 0 !important; 
         }
 
+        .slide-container .swiper-pagination {
+          position: absolute !important;
+          top: 20px !important;
+          bottom: auto !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          z-index: 10 !important;
+          width: auto !important;
+        }
 
         .swiper-pagination-bullet { 
           background-color: #6E93F7 !important; 
