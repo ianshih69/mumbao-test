@@ -202,11 +202,20 @@ export default function RoomList() {
           background-color: rgba(255, 255, 255, 0.6);
         }
 
-        /* Swiper 相關樣式 */
-        .room-list-swiper {
-          width: 100%;
-          overflow: visible;
-        }
+         /* Swiper 相關樣式 */
+         .room-list-swiper {
+           width: 100%;
+           overflow: visible;
+           height: 100%;
+         }
+
+         /* 手機端：確保 Swiper 有高度 */
+         @media (max-width: 767px) {
+           .room-list-swiper {
+             height: auto;
+             min-height: 60vh;
+           }
+         }
 
         .room-list-slide {
           width: 100%;
@@ -238,10 +247,18 @@ export default function RoomList() {
           opacity: 0.8;
         }
 
-        /* Swiper 包裝器 */
-        .room-list-swiper-wrapper {
-          position: relative;
-        }
+         /* Swiper 包裝器 */
+         .room-list-swiper-wrapper {
+           position: relative;
+           width: 100%;
+         }
+
+         /* 手機端：確保 Swiper 容器有高度 */
+         @media (max-width: 767px) {
+           .room-list-swiper-wrapper {
+             min-height: 60vh;
+           }
+         }
 
         /* 移動端標題列 */
         .room-list-header-mobile {
@@ -295,13 +312,24 @@ export default function RoomList() {
           gap: 0.375rem;
         }
 
-        /* 圖片網格 */
-        .room-list-grid {
-          display: grid;
-          grid-template-columns: 1fr;
-          grid-template-rows: 3fr 4fr;
-          gap: 0.75rem;
-        }
+         /* 圖片網格 */
+         .room-list-grid {
+           display: grid;
+           grid-template-columns: 1fr;
+           /* 手機端：上圖高度減少 1/4 後再增加 1/3 (2.25 * 4/3 = 3)，下圖高度增加 1/4 (4 * 5/4 = 5) */
+           grid-template-rows: 3fr 5fr;
+           gap: 0.75rem;
+           /* 確保 grid 有足夠的高度 */
+           min-height: 0;
+         }
+
+         /* 手機端：確保 grid 容器有高度 */
+         @media (max-width: 767px) {
+           .room-list-grid {
+             height: auto;
+             min-height: 60vh;
+           }
+         }
 
         @media (min-width: 768px) {
           .room-list-grid {
@@ -311,28 +339,37 @@ export default function RoomList() {
           }
         }
 
-        .room-list-image-left,
-        .room-list-image-right {
-          position: relative;
-          width: 100%;
-          min-width: 0;
-          aspect-ratio: 5 / 3;
-          overflow: hidden;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          background-color: rgba(0, 0, 0, 0.1);
-        }
+         .room-list-image-left,
+         .room-list-image-right {
+           position: relative;
+           width: 100%;
+           min-width: 0;
+           overflow: hidden;
+           border: 1px solid rgba(0, 0, 0, 0.1);
+           background-color: rgba(0, 0, 0, 0.1);
+         }
 
-        @media (min-width: 768px) {
-          .room-list-image-left {
-            aspect-ratio: 3 / 4;
-            height: 100%;
-          }
+         /* 手機端：移除 aspect-ratio，讓 grid-template-rows 控制高度 */
+         @media (max-width: 767px) {
+           .room-list-image-left,
+           .room-list-image-right {
+             aspect-ratio: unset !important;
+             height: 100% !important;
+             width: 100% !important;
+           }
+         }
 
-          .room-list-image-right {
-            aspect-ratio: 5 / 3;
-            height: 100%;
-          }
-        }
+         @media (min-width: 768px) {
+           .room-list-image-left {
+             aspect-ratio: 3 / 4;
+             height: 100%;
+           }
+
+           .room-list-image-right {
+             aspect-ratio: 5 / 3;
+             height: 100%;
+           }
+         }
 
         .room-list-image {
           position: absolute;
