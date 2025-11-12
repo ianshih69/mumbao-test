@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -57,9 +58,21 @@ const cardData = [
 
 // ===== 組件 =====
 export default function Slider3() {
+  const [showAllImages, setShowAllImages] = useState(false);
+
   return (
     <>
       <div className="slide-container swiper">
+        {/* 「最新消息」文字（在分頁原點正上方） */}
+        <div className="latest-news-title">
+          <div className="text-2xl md:text-4xl text-gray-800">
+            最新消息
+          </div>
+        </div>
+        
+        {/* 分頁原點（在圖片上方） */}
+        <div className="swiper-pagination"></div>
+        
         <div className="slide-content">
           <Swiper
             modules={[Navigation, Pagination]}
@@ -146,8 +159,65 @@ export default function Slider3() {
 
         <div className="swiper-button-next swiper-navBtn"></div>
         <div className="swiper-button-prev swiper-navBtn"></div>
-        <div className="swiper-pagination"></div>
+
+        {/* 中央下方「更多 +」按鈕（只有一個） */}
+        <div className="flex justify-center" style={{ marginTop: "calc(1rem + 20px)" }}>
+          <button
+            onClick={() => setShowAllImages(true)}
+            className="text-gray-700 hover:text-gray-900 text-base md:text-lg transition-colors"
+            aria-label="查看更多圖片"
+          >
+            更多 +
+          </button>
+        </div>
       </div>
+
+      {/* 顯示所有圖片的模態框 */}
+      {showAllImages && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowAllImages(false)}
+        >
+          <div
+            className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">所有圖片</h2>
+              <button
+                onClick={() => setShowAllImages(false)}
+                className="text-gray-600 hover:text-gray-800 text-2xl"
+                aria-label="關閉"
+              >
+                ×
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {cardData.map((card) => (
+                <div key={card.id} className="group relative overflow-hidden">
+                  <div
+                    className="relative w-full aspect-ratio: 314 / 367 overflow-hidden"
+                    style={{ aspectRatio: "314 / 367" }}
+                  >
+                    <Image
+                      src={card.image}
+                      alt={card.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div style={{ marginTop: "6px" }}>
+                    <div className="text-base font-medium mb-1 text-gray-800">
+                      {card.title}
+                    </div>
+                    <div className="text-sm text-gray-600">{card.date}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ===== 所有樣式都在這裡 ===== */}
       <style jsx global>{`
@@ -172,13 +242,15 @@ export default function Slider3() {
           position: relative;
           max-width: 1120px;
           width: 100%;
-          padding: 40px 0;
+          padding: 120px 0 40px 0;
         }
 
         .slide-content { 
           margin: 0 40px;
           overflow: hidden;
           border-radius: 0;
+          position: relative;
+          margin-top: 20px;
         }
 
         .card {
@@ -237,14 +309,24 @@ export default function Slider3() {
           left: 0 !important; 
         }
 
-        .slide-container .swiper-pagination {
+        .slide-container .latest-news-title {
           position: absolute !important;
           top: 20px !important;
+          left: 50% !important;
+          transform: translateX(-50%) !important;
+          z-index: 20 !important;
+        }
+
+        .slide-container .swiper-pagination {
+          position: absolute !important;
+          top: 100px !important;
           bottom: auto !important;
           left: 50% !important;
           transform: translateX(-50%) !important;
-          z-index: 10 !important;
+          z-index: 20 !important;
           width: auto !important;
+          margin-top: 0 !important;
+          pointer-events: auto !important;
         }
 
         .swiper-pagination-bullet { 
