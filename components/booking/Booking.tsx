@@ -1,33 +1,40 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getBookingData } from "@/lib/booking";
 
 export default function Booking() {
   const booking = getBookingData();
+  const [imageRatio, setImageRatio] = useState<number | null>(null);
+
+  useEffect(() => {
+    // 動態獲取圖片尺寸
+    const img = new Image();
+    img.src = booking.image;
+    img.onload = () => {
+      const ratio = img.height / img.width;
+      // 高度增加50%，所以比例也要增加50%
+      setImageRatio(ratio * 1.5);
+    };
+  }, [booking.image]);
 
   return (
     <>
       <section className="relative w-full py-16 bg-[#A4835E]">
-        <div className="mx-auto max-w-6xl px-4">
+        <div className="booking-section-container">
           {/* 使用明確的高度和相對定位，確保容器有高度 */}
+          {/* 桌面端：對齊 Room 頁面的圖片區域，使用 calc(100% + 1.5rem) */}
           <div
-            className="relative w-full overflow-hidden border border-gray-300 bg-black booking-container"
+            className="booking-image-wrapper"
             style={{
-              height: "400px", // 移動端固定高度
-              minHeight: "400px",
-            }}
+              ...(imageRatio
+                ? {
+                    "--img-ratio": imageRatio.toString(),
+                  }
+                : {}),
+            } as React.CSSProperties}
           >
-            {/* 背景圖片 - 確保圖片填滿容器 */}
-            <img
-              src={booking.image}
-              alt={booking.title}
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ zIndex: 1 }}
-              loading="lazy"
-              decoding="async"
-            />
-
             {/* 深色半透明遮罩 */}
             <div
               className="absolute inset-0 bg-black"
@@ -96,17 +103,65 @@ export default function Booking() {
             </div>
           </div>
         </div>
-
-        {/* 響應式樣式 - 桌面端使用不同高度 */}
-        <style jsx>{`
-          @media (min-width: 768px) {
-            .booking-container {
-              height: 300px !important;
-              min-height: 300px !important;
-            }
-          }
-        `}</style>
       </section>
+      <style jsx>{`
+        .booking-section-container {
+          max-width: 72rem;
+          margin: 0 auto;
+          padding: 0 1rem;
+        }
+
+        .booking-image-wrapper {
+          position: relative;
+          width: 100%;
+          height: 400px;
+          min-height: 400px;
+          overflow: hidden;
+          border: 1px solid rgba(209, 213, 219, 1);
+          background-color: rgba(0, 0, 0, 1);
+          background-image: url('${booking.image}');
+          background-size: cover;
+          background-position: center center;
+          background-repeat: no-repeat;
+        }
+
+        @media (min-width: 768px) {
+          .booking-section-container {
+            padding: 0 1rem;
+          }
+          .booking-image-wrapper {
+            width: calc(100% + 1.5rem);
+            height: 300px;
+            min-height: 300px;
+            margin-left: -1rem;
+          }
+        }
+
+        /* 手機端和平板電腦端：使用圖片比例來設置容器高度，完整顯示圖片 */
+        @media screen and (max-width: 1024px) {
+          .booking-image-wrapper {
+            height: auto;
+            min-height: 400px;
+          }
+          /* 如果已獲取圖片比例，使用 aspect-ratio 讓容器比例與圖片匹配 */
+          .booking-image-wrapper {
+            aspect-ratio: 1 / var(--img-ratio, 1.5);
+            height: auto;
+            min-height: 0;
+            background-size: 100% 100%;
+          }
+        }
+
+        /* 橫向手機和平板保持固定高度 */
+        @media screen and (max-width: 1024px) and (orientation: landscape) {
+          .booking-image-wrapper {
+            height: 400px !important;
+            min-height: 400px !important;
+            aspect-ratio: unset !important;
+            background-size: cover !important;
+          }
+        }
+      `}</style>
     </>
   );
 }
