@@ -46,7 +46,7 @@ export default function RoomList() {
                   onClick={() => swiperInstance?.slideTo(i)}
                   aria-label={`切換到第 ${i + 1} 頁`}
                   className="room-list-dot"
-                  ref={(el) => (dotsRef.current[i] = el)}
+                  ref={(el) => { dotsRef.current[i] = el; }}
                 />
               ))}
             </div>
@@ -76,7 +76,7 @@ export default function RoomList() {
                   onClick={() => swiperInstance?.slideTo(i)}
                   aria-label={`切換到第 ${i + 1} 頁`}
                   className="room-list-dot"
-                  ref={(el) => (dotsRef.current[i] = el)}
+                  ref={(el) => { dotsRef.current[i] = el; }}
                 />
               ))}
             </div>
