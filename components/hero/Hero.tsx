@@ -1,34 +1,37 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getCurrentHeroImage } from "@/lib/hero";
 
 export default function Hero() {
   const [imageRatio, setImageRatio] = useState<number | null>(null);
+  const currentImage = getCurrentHeroImage();
 
   useEffect(() => {
     // 動態獲取圖片尺寸
     const img = new Image();
-    img.src = "/images/Hero/page1-1.webp";
+    img.src = currentImage.src;
     img.onload = () => {
       const ratio = img.height / img.width;
       // 高度增加50%，所以比例也要增加50%
       setImageRatio(ratio * 1.5);
     };
-  }, []);
+  }, [currentImage.src]);
 
   return (
     <>
-      <div 
-        className="hero-container" 
-        role="img" 
-        aria-label="Hero Image"
+      <div
+        className="hero-container"
+        role="img"
+        aria-label={currentImage.alt}
         style={{
-          ...(imageRatio ? {
-            '--img-ratio': imageRatio.toString(),
-          } : {}),
+          ...(imageRatio
+            ? {
+                "--img-ratio": imageRatio.toString(),
+              }
+            : {}),
         } as React.CSSProperties}
-      >
-      </div>
+      ></div>
       <style jsx>{`
         .hero-container {
           position: relative;
@@ -37,7 +40,7 @@ export default function Hero() {
           min-height: 100vh;
           overflow: hidden;
           display: block;
-          background-image: url('/images/Hero/page1-1.webp');
+          background-image: url('${currentImage.src}');
           background-size: cover;
           background-position: center center;
           background-repeat: no-repeat;
@@ -74,3 +77,4 @@ export default function Hero() {
     </>
   );
 }
+
