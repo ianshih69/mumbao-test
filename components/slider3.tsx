@@ -65,7 +65,7 @@ export default function Slider3() {
       <div className="slide-container swiper">
         {/* 「最新消息」文字（在分頁原點正上方） */}
         <div className="latest-news-title">
-          <div className="text-2xl md:text-4xl text-gray-800">
+          <div className="text-xl md:text-3xl text-gray-800">
             最新消息
           </div>
         </div>
@@ -315,6 +315,10 @@ export default function Slider3() {
           left: 50% !important;
           transform: translateX(-50%) !important;
           z-index: 20 !important;
+        }
+
+        .slide-container .latest-news-title > div {
+          letter-spacing: 5px !important;
         }
 
         .slide-container .swiper-pagination {
