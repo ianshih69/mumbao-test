@@ -1,5 +1,5 @@
-import CodepenCarousel from "@/components/CodepenCarousel";
+import Slider3 from "@/components/slider3";
 
 export default function Page() {
-  return <CodepenCarousel />;
+  return <Slider3 />;
 }
