@@ -70,8 +70,14 @@ export default function Slider3() {
           >
             {cardData.map((card) => (
               <SwiperSlide key={card.id}>
-                <div className="card">
-                  <div className="card-image">
+                <div
+                  className="card group relative overflow-hidden cursor-pointer outline-none focus:outline-none focus-visible:ring-0"
+                  tabIndex={0}
+                  aria-label={card.name}
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                >
+                  {/* 圖片本體 */}
+                  <div className="card-image relative w-full h-full transition-transform duration-300 will-change-transform group-hover:scale-[1.02] group-focus:scale-[1.02] group-focus-within:scale-[1.02]">
                     <Image
                       src={card.image}
                       alt={card.name}
@@ -79,6 +85,20 @@ export default function Slider3() {
                       priority={card.id <= 2}
                       fill
                     />
+                  </div>
+
+                  {/* 反黑遮罩（只在 hover / focus / focus-within 顯示） */}
+                  <div className="pointer-events-none absolute inset-0 bg-black/45 transition-opacity duration-200 ease-out opacity-0 group-hover:opacity-100 group-focus:opacity-100 group-focus-within:opacity-100" />
+
+                  {/* 中央白框 + 文字（覆蓋層內放可點擊的 <a>） */}
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center transition-opacity duration-200 ease-out opacity-0 group-hover:opacity-100 group-focus:opacity-100 group-focus-within:opacity-100">
+                    <a
+                      href="#"
+                      aria-label={card.name}
+                      className="pointer-events-auto border border-white text-white px-5 py-2 md:px-6 md:py-2.5 text-sm md:text-base tracking-widest select-none"
+                    >
+                      詳細內容 ＋
+                    </a>
                   </div>
                 </div>
               </SwiperSlide>
@@ -128,6 +148,10 @@ export default function Slider3() {
           background-color: transparent;
           width: 100%;
           height: 100%;
+        }
+
+        .card:focus {
+          outline: none;
         }
 
         .card-image {
