@@ -21,7 +21,7 @@ export default function Booking() {
 
   return (
     <>
-      <section className="relative w-full py-16 bg-[#A4835E]">
+      <section className="booking-section relative w-full bg-[#A4835E]">
         <div className="booking-section-container">
           {/* 使用明確的高度和相對定位，確保容器有高度 */}
           {/* 桌面端：對齊 Room 頁面的圖片區域，使用 calc(100% + 1.5rem) */}
@@ -105,6 +105,20 @@ export default function Booking() {
         </div>
       </section>
       <style jsx>{`
+        .booking-section {
+          padding-top: 1.5rem;
+          padding-bottom: 4rem;
+          margin-top: -50px;
+        }
+
+        @media (min-width: 768px) {
+          .booking-section {
+            padding-top: 1.5rem;
+            padding-bottom: 4rem;
+            margin-top: -50px;
+          }
+        }
+
         .booking-section-container {
           max-width: 72rem;
           margin: 0 auto;
@@ -114,8 +128,8 @@ export default function Booking() {
         .booking-image-wrapper {
           position: relative;
           width: 100%;
-          height: 400px;
-          min-height: 400px;
+          height: 533px;
+          min-height: 533px;
           overflow: hidden;
           border: 1px solid rgba(209, 213, 219, 1);
           background-color: rgba(0, 0, 0, 1);
@@ -130,18 +144,34 @@ export default function Booking() {
             padding: 0 1rem;
           }
           .booking-image-wrapper {
-            width: calc(100% + 1.5rem);
-            height: 300px;
-            min-height: 300px;
-            margin-left: -1rem;
+            width: 100%;
+            height: 400px;
+            min-height: 400px;
+            margin-left: 0;
           }
         }
 
-        /* 手機端和平板電腦端：使用圖片比例來設置容器高度，完整顯示圖片 */
-        @media screen and (max-width: 1024px) {
+        /* 手機端：使用圖片比例來設置容器高度，在現有基礎上增加四分之一 */
+        @media screen and (max-width: 767px) {
           .booking-image-wrapper {
             height: auto;
-            min-height: 400px;
+            min-height: 533px;
+          }
+          /* 如果已獲取圖片比例，使用 aspect-ratio 讓容器比例與圖片匹配 */
+          /* 在現有比例基礎上增加25%，通過 CSS calc 實現 */
+          .booking-image-wrapper {
+            aspect-ratio: 1 / calc(var(--img-ratio, 1.5) * 1.25);
+            height: auto;
+            min-height: 0;
+            background-size: 100% 100%;
+          }
+        }
+
+        /* 平板電腦端：使用圖片比例來設置容器高度，完整顯示圖片 */
+        @media screen and (min-width: 768px) and (max-width: 1024px) {
+          .booking-image-wrapper {
+            height: auto;
+            min-height: 533px;
           }
           /* 如果已獲取圖片比例，使用 aspect-ratio 讓容器比例與圖片匹配 */
           .booking-image-wrapper {
@@ -155,8 +185,8 @@ export default function Booking() {
         /* 橫向手機和平板保持固定高度 */
         @media screen and (max-width: 1024px) and (orientation: landscape) {
           .booking-image-wrapper {
-            height: 400px !important;
-            min-height: 400px !important;
+            height: 533px !important;
+            min-height: 533px !important;
             aspect-ratio: unset !important;
             background-size: cover !important;
           }
