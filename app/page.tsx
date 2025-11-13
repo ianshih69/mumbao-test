@@ -3,6 +3,7 @@ import About from "@/components/about/About";
 import NewsList from "@/components/news/NewsList";
 import RoomList from "@/components/room/RoomList";
 import Booking from "@/components/booking/Booking";
+import Footer from "@/components/footer/Footer";
 
 export default function Page() {
   return (
@@ -12,6 +13,7 @@ export default function Page() {
       <NewsList />
       <RoomList />
       <Booking />
+      <Footer />
     </>
   );
 }
