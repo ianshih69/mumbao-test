@@ -216,6 +216,16 @@ export default function Footer() {
           padding: 2rem 0;
         }
 
+        /* 手機端：只移動內容往上 30px，背景保持原位置 */
+        @media (max-width: 767px) {
+          .footer-section {
+            padding-top: calc(2rem + 0px);
+          }
+          .footer-container {
+            margin-top: -30px;
+          }
+        }
+
         .footer-container {
           max-width: 72rem;
           margin: 0 auto;
