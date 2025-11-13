@@ -18,10 +18,11 @@ export default function NewsList() {
 
   return (
     <>
-      <div className="slide-container swiper">
+      <section className="news-list-section">
+        <div className="slide-container swiper">
         {/* 「最新消息」文字（在分頁原點正上方） */}
         <div className="latest-news-title">
-          <div className="text-xl md:text-3xl text-gray-800">最新消息</div>
+          <div className="text-xl md:text-3xl text-white">最新消息</div>
         </div>
 
         {/* 分頁原點（在圖片上方） */}
@@ -78,7 +79,7 @@ export default function NewsList() {
         <div className="flex justify-center" style={{ marginTop: "calc(1rem + 20px)" }}>
           <button
             onClick={() => setShowAllImages(true)}
-            className="text-gray-700 hover:text-gray-900 text-base md:text-lg transition-colors"
+            className="text-white hover:text-gray-200 text-base md:text-lg transition-colors"
             aria-label="查看更多圖片"
           >
             更多 +
@@ -97,10 +98,10 @@ export default function NewsList() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">所有圖片</h2>
+              <h2 className="text-2xl font-bold text-white">所有圖片</h2>
               <button
                 onClick={() => setShowAllImages(false)}
-                className="text-gray-600 hover:text-gray-800 text-2xl"
+                className="text-white hover:text-gray-200 text-2xl"
                 aria-label="關閉"
               >
                 ×
@@ -121,10 +122,10 @@ export default function NewsList() {
                     />
                   </div>
                   <div style={{ marginTop: "6px" }}>
-                    <div className="text-base font-medium mb-1 text-gray-800">
+                    <div className="text-base font-medium mb-1 text-white">
                       {news.title}
                     </div>
-                    <div className="text-sm text-gray-600">{news.date}</div>
+                    <div className="text-sm text-white">{news.date}</div>
                   </div>
                 </div>
               ))}
@@ -132,6 +133,7 @@ export default function NewsList() {
           </div>
         </div>
       )}
+      </section>
 
       {/* ===== 所有樣式都在這裡 ===== */}
       <style jsx global>{`
@@ -144,14 +146,17 @@ export default function NewsList() {
           font-family: 'Poppins', sans-serif;
         }
 
-        body {
-          background-color: #EFEFEF;
+        .news-list-section {
+          background-color: #a4835e;
+          width: 100%;
+          padding: 0;
         }
 
         .slide-container {
           position: relative;
           max-width: 1120px;
           width: 100%;
+          margin: 0 auto;
           padding: 120px 0 40px 0;
         }
 
@@ -199,12 +204,12 @@ export default function NewsList() {
         }
 
         .swiper-navBtn {
-          color: #6E93F7 !important;
+          color: white !important;
           transition: all .3s ease;
         }
 
         .swiper-navBtn:hover { 
-          color: #4070F4 !important; 
+          color: rgba(255, 255, 255, 0.8) !important; 
         }
 
         .swiper-navBtn::before, .swiper-navBtn::after { 
@@ -244,12 +249,12 @@ export default function NewsList() {
         }
 
         .swiper-pagination-bullet { 
-          background-color: #6E93F7 !important; 
+          background-color: rgba(255, 255, 255, 0.4) !important; 
           opacity: 1 !important; 
         }
 
         .swiper-pagination-bullet-active { 
-          background-color: #4070F4 !important; 
+          background-color: white !important; 
         }
 
         @media screen and (max-width: 768px) {

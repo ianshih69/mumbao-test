@@ -21,10 +21,10 @@ export default function RoomList() {
     dotsRef.current.forEach((dot, i) => {
       if (dot) {
         if (i === activeIndex) {
-          dot.style.backgroundColor = "white";
+          dot.style.setProperty("background-color", "white", "important");
           dot.style.transform = "scale(1.25)";
         } else {
-          dot.style.backgroundColor = "rgba(255, 255, 255, 0.4)";
+          dot.style.setProperty("background-color", "rgba(255, 255, 255, 0.4)", "important");
           dot.style.transform = "scale(1)";
         }
       }
@@ -43,10 +43,25 @@ export default function RoomList() {
                 <button
                   key={i}
                   type="button"
-                  onClick={() => swiperInstance?.slideTo(i)}
+                  onClick={() => {
+                    swiperInstance?.slideTo(i);
+                    setActiveIndex(i);
+                  }}
                   aria-label={`切換到第 ${i + 1} 頁`}
                   className="room-list-dot"
-                  ref={(el) => { dotsRef.current[i] = el; }}
+                  ref={(el) => {
+                    if (el) {
+                      dotsRef.current[i] = el;
+                      // 立即設置初始狀態
+                      if (i === activeIndex) {
+                        el.style.setProperty("background-color", "white", "important");
+                        el.style.transform = "scale(1.25)";
+                      } else {
+                        el.style.setProperty("background-color", "rgba(255, 255, 255, 0.4)", "important");
+                        el.style.transform = "scale(1)";
+                      }
+                    }
+                  }}
                 />
               ))}
             </div>
@@ -55,7 +70,7 @@ export default function RoomList() {
             <h2 className="room-list-title-center">房型</h2>
 
             {/* 上右：更多+連結 */}
-            <Link href="/rooms" className="room-list-more-link">
+            <Link href="/rooms" className="room-list-more-link" style={{ color: "white" }}>
               更多 ＋
             </Link>
           </div>
@@ -73,17 +88,32 @@ export default function RoomList() {
                 <button
                   key={i}
                   type="button"
-                  onClick={() => swiperInstance?.slideTo(i)}
+                  onClick={() => {
+                    swiperInstance?.slideTo(i);
+                    setActiveIndex(i);
+                  }}
                   aria-label={`切換到第 ${i + 1} 頁`}
                   className="room-list-dot"
-                  ref={(el) => { dotsRef.current[i] = el; }}
+                  ref={(el) => {
+                    if (el) {
+                      dotsRef.current[i] = el;
+                      // 立即設置初始狀態
+                      if (i === activeIndex) {
+                        el.style.setProperty("background-color", "white", "important");
+                        el.style.transform = "scale(1.25)";
+                      } else {
+                        el.style.setProperty("background-color", "rgba(255, 255, 255, 0.4)", "important");
+                        el.style.transform = "scale(1)";
+                      }
+                    }
+                  }}
                 />
               ))}
             </div>
 
             {/* 移動端："更多 +" 在圖外右上方 */}
             <div className="room-list-more-mobile-top">
-              <Link href="/rooms" className="room-list-more-link-mobile">
+              <Link href="/rooms" className="room-list-more-link-mobile" style={{ color: "white" }}>
                 更多 ＋
               </Link>
             </div>
@@ -109,9 +139,18 @@ export default function RoomList() {
               bulletClass: "room-list-pagination-bullet",
               bulletActiveClass: "room-list-pagination-bullet-active",
             }}
-            onSwiper={setSwiperInstance}
+            onSwiper={(swiper) => {
+              setSwiperInstance(swiper);
+              // 初始化時設置正確的索引
+              setActiveIndex(swiper.realIndex);
+            }}
             onSlideChange={(swiper) => {
               // 處理 loop 模式下的真實索引
+              const realIndex = swiper.realIndex;
+              setActiveIndex(realIndex);
+            }}
+            onSlideChangeTransitionStart={(swiper) => {
+              // 在切換開始時也更新索引，確保及時更新
               const realIndex = swiper.realIndex;
               setActiveIndex(realIndex);
             }}
@@ -195,13 +234,13 @@ export default function RoomList() {
           height: 0.5rem;
           border-radius: 9999px;
           border: none;
-          background-color: rgba(255, 255, 255, 0.4);
+          background-color: rgba(255, 255, 255, 0.4) !important;
           cursor: pointer;
           transition: all 0.3s ease;
         }
 
         .room-list-dot:hover {
-          background-color: rgba(255, 255, 255, 0.6);
+          background-color: rgba(255, 255, 255, 0.6) !important;
         }
 
          /* Swiper 相關樣式 */
@@ -240,7 +279,7 @@ export default function RoomList() {
         }
 
         .room-list-more-link {
-          color: white;
+          color: white !important;
           text-decoration: none;
           font-size: 1rem;
           transition: opacity 0.3s ease;
@@ -348,7 +387,7 @@ export default function RoomList() {
            width: 100%;
            min-width: 0;
            overflow: hidden;
-           border: 1px solid rgba(0, 0, 0, 0.1);
+           border: 1px solid white;
            background-color: #1a1a1a;
          }
 
@@ -396,7 +435,7 @@ export default function RoomList() {
         }
 
         .room-list-more-link-mobile {
-          color: white;
+          color: white !important;
           text-decoration: none;
           font-size: 0.875rem;
           transition: opacity 0.3s ease;

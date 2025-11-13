@@ -44,10 +44,10 @@ export default function NewsCard({ news, priority = false }: NewsCardProps) {
 
       {/* 圖片外部左下角文字（標題和日期） */}
       <div style={{ marginTop: "6px" }}>
-        <div className="text-base md:text-lg font-medium mb-1 text-gray-800">
+        <div className="text-base md:text-lg font-medium mb-1 text-white">
           {news.title}
         </div>
-        <div className="text-sm md:text-base text-gray-600">{news.date}</div>
+        <div className="text-sm md:text-base text-white">{news.date}</div>
       </div>
     </div>
   );
