@@ -220,24 +220,36 @@ export default function NewsList() {
         }
 
         .swiper-navBtn {
+          width: 48px !important;
+          height: 48px !important;
+          background-color: rgba(60, 60, 60, 0.8) !important;
+          border-radius: 50% !important;
           color: white !important;
           transition: all .3s ease;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          margin-top: 0 !important;
+          top: 50% !important;
+          transform: translateY(-50%) !important;
         }
 
         .swiper-navBtn:hover { 
-          color: rgba(255, 255, 255, 0.8) !important; 
+          background-color: rgba(60, 60, 60, 1) !important;
+          color: white !important;
         }
 
-        .swiper-navBtn::before, .swiper-navBtn::after { 
-          font-size: 40px !important; 
+        .swiper-navBtn::after {
+          font-size: 20px !important;
+          font-weight: bold !important;
         }
 
         .swiper-button-next { 
-          right: 0 !important; 
+          right: 10px !important; 
         }
 
         .swiper-button-prev { 
-          left: 0 !important; 
+          left: 10px !important; 
         }
 
         .slide-container .latest-news-title {
