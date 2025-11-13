@@ -133,6 +133,9 @@ export default function NewsList() {
           </div>
         </div>
       )}
+      
+      {/* News 和 Booking 之間的白線分隔 */}
+      <div className="news-booking-divider"></div>
       </section>
 
       {/* ===== 所有樣式都在這裡 ===== */}
@@ -150,6 +153,19 @@ export default function NewsList() {
           background-color: #a4835e;
           width: 100%;
           padding: 0;
+          position: relative;
+        }
+
+        .news-booking-divider {
+          max-width: 72rem;
+          width: 100%;
+          margin: 0 auto;
+          padding: 0 1rem;
+          height: 0;
+          border-top: 1px solid white;
+          margin-top: 0;
+          margin-bottom: 0;
+          box-sizing: border-box;
         }
 
         .slide-container {

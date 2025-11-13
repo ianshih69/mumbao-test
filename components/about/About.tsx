@@ -37,7 +37,7 @@ export default function About() {
         .about-section {
           width: 100%;
           padding: 80px 0;
-          background-color: #ffffff;
+          background-color: #eed3b2;
         }
 
         .about-container {
