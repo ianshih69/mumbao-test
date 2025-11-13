@@ -14,8 +14,10 @@ export default function Booking() {
     img.src = booking.image;
     img.onload = () => {
       const ratio = img.height / img.width;
-      // 高度增加50%，所以比例也要增加50%
-      setImageRatio(ratio * 1.5);
+      // 桌面端：高度減少四分之一（75%），所以比例也要減少25%
+      // 手機端：高度增加50%，所以比例也要增加50%
+      // 使用 1.5 * 0.75 = 1.125 來減少四分之一
+      setImageRatio(ratio * 1.125);
     };
   }, [booking.image]);
 
@@ -139,18 +141,6 @@ export default function Booking() {
           background-repeat: no-repeat;
         }
 
-        @media (min-width: 768px) {
-          .booking-section-container {
-            padding: 0 1rem;
-          }
-          .booking-image-wrapper {
-            width: 100%;
-            height: 400px;
-            min-height: 400px;
-            margin-left: 0;
-          }
-        }
-
         /* 手機端：使用圖片比例來設置容器高度，在現有基礎上增加四分之一 */
         @media screen and (max-width: 767px) {
           .booking-image-wrapper {
@@ -167,18 +157,45 @@ export default function Booking() {
           }
         }
 
-        /* 平板電腦端：使用圖片比例來設置容器高度，完整顯示圖片 */
+        /* 平板端：使用圖片比例來設置容器高度 */
         @media screen and (min-width: 768px) and (max-width: 1024px) {
+          .booking-section-container {
+            padding: 0 1rem;
+          }
           .booking-image-wrapper {
+            width: 100%;
             height: auto;
-            min-height: 533px;
+            min-height: 400px;
+            margin-left: 0;
           }
           /* 如果已獲取圖片比例，使用 aspect-ratio 讓容器比例與圖片匹配 */
           .booking-image-wrapper {
-            aspect-ratio: 1 / var(--img-ratio, 1.5);
+            aspect-ratio: 1 / var(--img-ratio, 1.125);
             height: auto;
             min-height: 0;
-            background-size: 100% 100%;
+            background-size: cover;
+            background-position: center center;
+          }
+        }
+
+        /* 桌面端（1024px以上，最大視窗）：高度減少四分之一 */
+        @media (min-width: 1025px) {
+          .booking-section-container {
+            padding: 0 1rem;
+          }
+          .booking-image-wrapper {
+            width: 100%;
+            height: auto;
+            min-height: 300px;
+            margin-left: 0;
+          }
+          /* 如果已獲取圖片比例，使用 aspect-ratio 讓容器比例與圖片匹配，減少四分之一 */
+          .booking-image-wrapper {
+            aspect-ratio: 1 / calc(var(--img-ratio, 1.125) * 0.75);
+            height: auto;
+            min-height: 0;
+            background-size: cover;
+            background-position: center center;
           }
         }
 
