@@ -97,6 +97,8 @@ export default function RoomList() {
             slidesPerView={1}
             loop={true}
             grabCursor={true}
+            speed={500}
+            watchSlidesProgress={true}
             autoplay={{
               delay: 3000,
               disableOnInteraction: false,
@@ -123,7 +125,7 @@ export default function RoomList() {
                     <img
                       src={g.left}
                       alt={`房型圖片 ${i + 1} - 左`}
-                      loading={i === 0 ? "eager" : "lazy"}
+                      loading="eager"
                       decoding="async"
                       className="room-list-image"
                     />
@@ -134,7 +136,7 @@ export default function RoomList() {
                     <img
                       src={g.right}
                       alt={`房型圖片 ${i + 1} - 右`}
-                      loading={i === 0 ? "eager" : "lazy"}
+                      loading="eager"
                       decoding="async"
                       className="room-list-image"
                     />
@@ -205,7 +207,7 @@ export default function RoomList() {
          /* Swiper 相關樣式 */
          .room-list-swiper {
            width: 100%;
-           overflow: visible;
+           overflow: hidden;
            height: 100%;
          }
 
@@ -219,6 +221,7 @@ export default function RoomList() {
 
         .room-list-slide {
           width: 100%;
+          opacity: 1;
         }
 
         .room-list-swiper-pagination {
@@ -346,7 +349,7 @@ export default function RoomList() {
            min-width: 0;
            overflow: hidden;
            border: 1px solid rgba(0, 0, 0, 0.1);
-           background-color: rgba(0, 0, 0, 0.1);
+           background-color: #1a1a1a;
          }
 
          /* 手機端：移除 aspect-ratio，讓 grid-template-rows 控制高度 */
