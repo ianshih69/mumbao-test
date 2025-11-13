@@ -1,8 +1,10 @@
 "use client";
 
+import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { NewsItem } from "@/lib/news";
+import { useLazyImage } from "@/hooks/useLazyImage";
 
 type NewsCardProps = {
   news: NewsItem;
@@ -10,8 +12,16 @@ type NewsCardProps = {
 };
 
 export default function NewsCard({ news, priority = false }: NewsCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const { isVisible, shouldLoad } = useLazyImage({
+    immediate: priority, // 首屏圖片立即載入
+    threshold: 0.1,
+    elementRef: cardRef,
+  });
+
   return (
     <div
+      ref={cardRef}
       className="card group relative overflow-visible cursor-pointer outline-none focus:outline-none focus-visible:ring-0"
       tabIndex={0}
       aria-label={news.name}
@@ -19,13 +29,19 @@ export default function NewsCard({ news, priority = false }: NewsCardProps) {
     >
       {/* 圖片本體 */}
       <div className="card-image relative w-full transition-transform duration-300 will-change-transform group-hover:scale-[1.02] group-focus:scale-[1.02] group-focus-within:scale-[1.02] overflow-hidden">
-        <Image
-          src={news.image}
-          alt={news.name}
-          className="card-img"
-          priority={priority}
-          fill
-        />
+        {shouldLoad && (
+          <Image
+            src={news.image}
+            alt={news.name}
+            className="card-img"
+            priority={priority}
+            fill
+            style={{
+              opacity: isVisible ? 1 : 0,
+              transition: priority ? "none" : "opacity 0.8s ease-out",
+            }}
+          />
+        )}
 
         {/* 反黑遮罩（只在 hover / focus / focus-within 顯示） */}
         <div className="pointer-events-none absolute inset-0 bg-black/45 transition-opacity duration-200 ease-out opacity-0 group-hover:opacity-100 group-focus:opacity-100 group-focus-within:opacity-100" />

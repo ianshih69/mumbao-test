@@ -6,6 +6,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
 import { roomImageGroups } from "@/lib/room";
+import { useLazyImage } from "@/hooks/useLazyImage";
 
 // 導入 Swiper 樣式
 import "swiper/css";
@@ -15,6 +16,12 @@ export default function RoomList() {
   const [swiperInstance, setSwiperInstance] = useState<SwiperType | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const dotsRef = useRef<(HTMLButtonElement | null)[]>([]);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const { isVisible, shouldLoad } = useLazyImage({
+    immediate: false,
+    threshold: 0.1,
+    elementRef: sectionRef,
+  });
 
   // 更新圓圈指示器樣式
   useEffect(() => {
@@ -33,7 +40,7 @@ export default function RoomList() {
 
   return (
     <>
-      <section className="room-list-section">
+      <section className="room-list-section" ref={sectionRef}>
         <div className="room-list-container">
           {/* 桌面端標題列：上左圓圈、上中標題、上右更多連結 */}
           <div className="room-list-header-desktop">
@@ -161,24 +168,36 @@ export default function RoomList() {
                 <div className="room-list-grid">
                   {/* Left image: 3:4 直式 */}
                   <div className="room-list-image-left">
-                    <img
-                      src={g.left}
-                      alt={`房型圖片 ${i + 1} - 左`}
-                      loading="eager"
-                      decoding="async"
-                      className="room-list-image"
-                    />
+                    {shouldLoad && (
+                      <img
+                        src={g.left}
+                        alt={`房型圖片 ${i + 1} - 左`}
+                        loading="lazy"
+                        decoding="async"
+                        className="room-list-image"
+                        style={{
+                          opacity: isVisible ? 1 : 0,
+                          transition: "opacity 0.8s ease-out",
+                        }}
+                      />
+                    )}
                   </div>
 
                   {/* Right image: 5:3 橫式 */}
                   <div className="room-list-image-right">
-                    <img
-                      src={g.right}
-                      alt={`房型圖片 ${i + 1} - 右`}
-                      loading="eager"
-                      decoding="async"
-                      className="room-list-image"
-                    />
+                    {shouldLoad && (
+                      <img
+                        src={g.right}
+                        alt={`房型圖片 ${i + 1} - 右`}
+                        loading="lazy"
+                        decoding="async"
+                        className="room-list-image"
+                        style={{
+                          opacity: isVisible ? 1 : 0,
+                          transition: "opacity 0.8s ease-out",
+                        }}
+                      />
+                    )}
                   </div>
                 </div>
               </SwiperSlide>
@@ -388,7 +407,7 @@ export default function RoomList() {
            min-width: 0;
            overflow: hidden;
            border: 1px solid white;
-           background-color: #1a1a1a;
+           background-color: #a4835e;
          }
 
          /* 手機端：移除 aspect-ratio，讓 grid-template-rows 控制高度 */

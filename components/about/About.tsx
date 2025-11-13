@@ -1,24 +1,38 @@
 "use client";
 
+import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getAboutData } from "@/lib/about";
+import { useLazyImage } from "@/hooks/useLazyImage";
 
 export default function About() {
   const about = getAboutData();
+  const imageWrapperRef = useRef<HTMLElement | null>(null);
+  const { isVisible, shouldLoad } = useLazyImage({
+    immediate: false,
+    threshold: 0.1,
+    elementRef: imageWrapperRef,
+  });
 
   return (
     <>
-      <section className="about-section">
+      <section className="about-section" ref={imageWrapperRef}>
         <div className="about-container">
           <div className="about-image-wrapper">
-            <Image
-              src={about.image}
-              alt={about.title}
-              fill
-              className="about-image"
-              priority
-            />
+            {shouldLoad && (
+              <Image
+                src={about.image}
+                alt={about.title}
+                fill
+                className="about-image"
+                loading="lazy"
+                style={{
+                  opacity: isVisible ? 1 : 0,
+                  transition: "opacity 0.8s ease-out",
+                }}
+              />
+            )}
           </div>
           <div className="about-content">
             <h2 className="about-title">{about.title}</h2>

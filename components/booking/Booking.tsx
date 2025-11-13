@@ -1,12 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { getBookingData } from "@/lib/booking";
+import { useLazyImage } from "@/hooks/useLazyImage";
 
 export default function Booking() {
   const booking = getBookingData();
   const [imageRatio, setImageRatio] = useState<number | null>(null);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const { isVisible, shouldLoad } = useLazyImage({
+    immediate: false,
+    threshold: 0.1,
+    elementRef: sectionRef,
+  });
 
   useEffect(() => {
     // 動態獲取圖片尺寸
@@ -23,7 +30,7 @@ export default function Booking() {
 
   return (
     <>
-      <section className="booking-section relative w-full bg-[#A4835E]">
+      <section className="booking-section relative w-full bg-[#A4835E]" ref={sectionRef}>
         <div className="booking-section-container">
           {/* 使用明確的高度和相對定位，確保容器有高度 */}
           {/* 桌面端：對齊 Room 頁面的圖片區域，使用 calc(100% + 1.5rem) */}
@@ -35,6 +42,13 @@ export default function Booking() {
                     "--img-ratio": imageRatio.toString(),
                   }
                 : {}),
+              ...(shouldLoad
+                ? {
+                    backgroundImage: `url('${booking.image}')`,
+                  }
+                : {}),
+              opacity: shouldLoad && isVisible ? 1 : 0,
+              transition: "opacity 0.8s ease-out",
             } as React.CSSProperties}
           >
             {/* 深色半透明遮罩 */}
@@ -135,7 +149,6 @@ export default function Booking() {
           overflow: hidden;
           border: 1px solid rgba(209, 213, 219, 1);
           background-color: rgba(0, 0, 0, 1);
-          background-image: url('${booking.image}');
           background-size: cover;
           background-position: center center;
           background-repeat: no-repeat;
