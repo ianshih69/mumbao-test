@@ -277,9 +277,6 @@ export default function NewsList() {
           .slide-content { 
             margin: 0 10px; 
           }
-          .swiper-navBtn { 
-            display: none !important; 
-          }
         }
       `}</style>
     </>

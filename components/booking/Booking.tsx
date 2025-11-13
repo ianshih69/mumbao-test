@@ -141,16 +141,16 @@ export default function Booking() {
           background-repeat: no-repeat;
         }
 
-        /* 手機端：使用圖片比例來設置容器高度，在現有基礎上增加四分之一 */
+        /* 手機端：使用圖片比例來設置容器高度，在現有基礎上增加三分之一 */
         @media screen and (max-width: 767px) {
           .booking-image-wrapper {
             height: auto;
             min-height: 533px;
           }
           /* 如果已獲取圖片比例，使用 aspect-ratio 讓容器比例與圖片匹配 */
-          /* 在現有比例基礎上增加25%，通過 CSS calc 實現 */
+          /* 在現有比例基礎上增加三分之一（1.25 * 4/3 = 1.667），通過 CSS calc 實現 */
           .booking-image-wrapper {
-            aspect-ratio: 1 / calc(var(--img-ratio, 1.5) * 1.25);
+            aspect-ratio: 1 / calc(var(--img-ratio, 1.5) * 1.667);
             height: auto;
             min-height: 0;
             background-size: 100% 100%;
