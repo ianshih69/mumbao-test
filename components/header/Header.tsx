@@ -12,10 +12,12 @@ export default function Header() {
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState("TW");
   const [scrollY, setScrollY] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   const [headerMode, _setHeaderMode] = useState<HeaderMode>("top");
   const headerModeRef = useRef<HeaderMode>("top");
   const hideTimeoutRef = useRef<number | null>(null);
+  const lastAtTopRef = useRef<boolean>(true); // 上一刻是不是在頂部區域
 
   const setHeaderMode = (mode: HeaderMode) => {
     headerModeRef.current = mode;
@@ -33,9 +35,9 @@ export default function Header() {
   };
 
   useEffect(() => {
-    const TOP_THRESHOLD = 10; // 小於這個視為在頂部
+    const TOP_THRESHOLD = 80; // 視覺上接近頂端就算 top（手機比較容易觸發）
     const HIDE_DURATION = 300; // 收上去動畫時間 (ms) 要跟 CSS duration 一致
-    const PAUSE_DURATION = 0; // 往下時收完停 0 秒
+    const PAUSE_DURATION = 100; // 往下時收完停 0.1 秒
     const TOTAL_DOWN_DELAY = HIDE_DURATION + PAUSE_DURATION;
 
     const startHideToSolid = () => {
@@ -53,45 +55,70 @@ export default function Header() {
       hideTimeoutRef.current = window.setTimeout(() => {
         setHeaderMode("top");
         hideTimeoutRef.current = null;
-      }, HIDE_DURATION); // 往上回頂端不多加停留
+      }, HIDE_DURATION);
     };
 
     const handleScroll = () => {
       const currentY = window.scrollY || 0;
       setScrollY(currentY);
 
-      // 在頂部區域
-      if (currentY <= TOP_THRESHOLD) {
-        if (headerModeRef.current === "solid") {
-          // 有背景 header → 收上去 → 回到透明 top
-          if (headerModeRef.current !== "hidingToTop") {
-            startHideToTop();
-          }
-        } else if (headerModeRef.current === "hidingToSolid") {
-          // 尚未完成往下動畫就被拉回頂部：直接重置成 top
-          cleanupTimers();
-          setHeaderMode("top");
+      const atTop = currentY <= TOP_THRESHOLD;
+      const wasAtTop = lastAtTopRef.current;
+      lastAtTopRef.current = atTop;
+
+      // ✦ 情況 1：從頂部「離開」→ top → hidingToSolid → solid
+      if (!atTop && wasAtTop) {
+        if (headerModeRef.current === "top") {
+          startHideToSolid();
         }
-        // 其他情況 (top / hidingToTop) 就維持現狀
         return;
       }
 
-      // 離開頂部（往下滑）
-      if (headerModeRef.current === "top") {
-        // 透明版本第一次往下：top → hidingToSolid → (停) → solid
-        startHideToSolid();
+      // ✦ 情況 2：從下面「回到頂部」→ solid → hidingToTop → top
+      if (atTop && !wasAtTop) {
+        if (headerModeRef.current === "solid") {
+          startHideToTop();
+        } else if (
+          headerModeRef.current === "hidingToSolid" ||
+          headerModeRef.current === "hidingToTop"
+        ) {
+          // 動畫中被拉回頂部，直接歸零
+          cleanupTimers();
+          setHeaderMode("top");
+        } else {
+          // 已經是 top 就維持
+          setHeaderMode("top");
+        }
+        return;
       }
 
-      // 若已經是 hidingToSolid / solid / hidingToTop，就不要重複啟動
+      // 其他只是中間滑動，不跨門檻就什麼都不做
     };
 
-    window.addEventListener("scroll", handleScroll);
-    handleScroll(); // 初始化
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    // 初始化：決定一開始是不是在頂端
+    const initY = window.scrollY || 0;
+    setScrollY(initY);
+    lastAtTopRef.current = initY <= TOP_THRESHOLD;
+    if (lastAtTopRef.current) {
+      setHeaderMode("top");
+    }
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
       cleanupTimers();
     };
+  }, []);
+
+  // 檢測是否為手機端
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   // 點 header 外面關閉語系選單
@@ -117,14 +144,34 @@ export default function Header() {
     console.log("Selected language:", code);
   };
 
-  const isTop = headerMode === "top";
   const isHiding =
     headerMode === "hidingToSolid" || headerMode === "hidingToTop";
-  const isSolid = headerMode === "solid";
 
   // 有背景樣式：solid & 往上收回頂部(hidingToTop) 的時候都保持有背景
   const useSolidBackground =
     headerMode === "solid" || headerMode === "hidingToTop";
+
+  // 手機端在 top 狀態時也要有背景（不透明），讓 header 看起來是切一塊在 hero 圖上方
+  // 桌機端在 top 狀態時保持透明（維持現有效果）
+  const getBackgroundColor = () => {
+    // 手機端：無論什麼狀態都有背景
+    if (isMobile) {
+      if (!useSolidBackground) {
+        return "rgba(244,210,168,0.96)"; // top 狀態：不透明背景
+      }
+      return "rgba(244,210,168,0.96)"; // solid 狀態：不透明背景
+    }
+    // 桌機端：只在 solid 狀態有背景
+    if (!useSolidBackground) return "transparent";
+    return "rgba(244,210,168,0.96)";
+  };
+
+  // 手機端不使用背景圖片，桌機端在 solid 狀態使用背景圖片
+  const getBackgroundImage = () => {
+    if (isMobile) return "none"; // 手機端不使用背景圖片
+    if (!useSolidBackground) return "none"; // 桌機端 top 狀態不使用背景圖片
+    return `url(${headerImages.background})`; // 桌機端 solid 狀態使用背景圖片
+  };
 
   return (
     <>
@@ -134,13 +181,9 @@ export default function Header() {
           isHiding ? "-translate-y-[130%]" : "translate-y-0"
         }`}
         style={{
-          backgroundColor: useSolidBackground
-            ? "rgba(244,210,168,0.96)"
-            : "transparent",
-          backgroundImage: useSolidBackground
-            ? `url(${headerImages.background})`
-            : "none",
-          backgroundSize: useSolidBackground ? "cover" : "auto",
+          backgroundColor: getBackgroundColor(),
+          backgroundImage: getBackgroundImage(),
+          backgroundSize: useSolidBackground && !isMobile ? "cover" : "auto",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
           boxShadow: useSolidBackground
@@ -238,7 +281,7 @@ export default function Header() {
 
             <Link
               href="/"
-              className="flex-1 text-center select-none translate-y-[2px]"
+              className="flex-1 text中心 select-none translate-y-[2px]"
             >
               <Image
                 src={headerImages.logo}

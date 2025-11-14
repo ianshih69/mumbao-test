@@ -78,6 +78,13 @@ export default function Hero() {
             background-size: 100% 100%;
           }
         }
+        /* 手機版（md 以下）：Hero 容器往下移動，避免被 header 遮擋 */
+        @media screen and (max-width: 767px) {
+          .hero-container {
+            margin-top: 64px; /* header 高度 h-16 = 64px，讓 hero 圖從 header 下方開始 */
+            background-size: cover !important; /* 覆蓋 1024px 媒體查詢中的 100% 100% */
+          }
+        }
         /* 橫向手機和平板保持全屏 */
         @media screen and (max-width: 1024px) and (orientation: landscape) {
           .hero-container {
