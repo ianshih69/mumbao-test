@@ -56,6 +56,8 @@ export default function Hero() {
           background-position: center center;
           background-repeat: no-repeat;
           background-attachment: scroll;
+          /* 確保 Hero 在 Header 下方，但背景圖能顯示 */
+          z-index: 1;
         }
         @supports not (height: 100dvh) {
           .hero-container {

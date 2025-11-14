@@ -30,15 +30,31 @@ export default function AboutPage() {
           </div>
         </div>
       </div>
-      <style jsx>{`
+      <style jsx global>{`
         .about-page {
           width: 100%;
           min-height: 100vh;
           padding: 80px 0;
-          background-color: #ffffff;
+          position: relative;
+        }
+
+        .about-page::before {
+          content: "";
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-image: url("/images/About/background.webp");
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+          z-index: -1;
         }
 
         .about-page-container {
+          position: relative;
+          z-index: 1;
           max-width: 1200px;
           margin: 0 auto;
           padding: 0 40px;
