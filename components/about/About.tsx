@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getAboutData } from "@/lib/about";
@@ -8,12 +8,22 @@ import { useLazyImage } from "@/hooks/useLazyImage";
 
 export default function About() {
   const about = getAboutData();
+  const [mounted, setMounted] = useState(false);
   const imageWrapperRef = useRef<HTMLElement | null>(null);
   const { isVisible, shouldLoad } = useLazyImage({
     immediate: false,
     threshold: 0.1,
     elementRef: imageWrapperRef,
   });
+
+  // 確保只在客戶端 hydration 完成後才顯示內容，避免 SSR/CSR mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 在 hydration 完成前隱藏內容，避免 SSR/CSR mismatch 導致的閃爍
+  // 使用 opacity 而不是 visibility，避免 layout shift
+  const contentStyle = !mounted ? { opacity: 0 } : {};
 
   return (
     <>
@@ -34,7 +44,7 @@ export default function About() {
               />
             )}
           </div>
-          <div className="about-content">
+          <div className="about-content" style={contentStyle}>
             <h2 className="about-title">{about.title}</h2>
             <div className="about-text">
               {about.content.split("\n\n").map((paragraph, index) => (

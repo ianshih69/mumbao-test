@@ -8,25 +8,69 @@ import { useLazyImage } from "@/hooks/useLazyImage";
 export default function Booking() {
   const booking = getBookingData();
   const [imageRatio, setImageRatio] = useState<number | null>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const sectionRef = useRef<HTMLElement | null>(null);
   const { isVisible, shouldLoad } = useLazyImage({
     immediate: false,
     threshold: 0.1,
+    rootMargin: "200px", // 提前 200px 開始載入圖片
     elementRef: sectionRef,
   });
 
   useEffect(() => {
-    // 動態獲取圖片尺寸
+    if (!shouldLoad) {
+      // 重置狀態，確保重新載入時不會顯示舊的圖片
+      setImageLoaded(false);
+      setImageRatio(null);
+      return;
+    }
+
+    // 動態獲取圖片尺寸並確保圖片完全載入
     const img = new Image();
-    img.src = booking.image;
-    img.onload = () => {
+    let isCancelled = false;
+    
+    const handleLoad = () => {
+      if (isCancelled) return;
+      
+      // 驗證圖片是否正確載入
+      if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+        return;
+      }
+      
       const ratio = img.height / img.width;
       // 桌面端：高度減少四分之一（75%），所以比例也要減少25%
       // 手機端：高度增加50%，所以比例也要增加50%
       // 使用 1.5 * 0.75 = 1.125 來減少四分之一
       setImageRatio(ratio * 1.125);
+      setImageLoaded(true);
     };
-  }, [booking.image]);
+
+    img.onload = handleLoad;
+    img.onerror = () => {
+      if (isCancelled) return;
+      // 如果圖片載入失敗，仍然顯示（避免永遠不顯示）
+      setImageLoaded(true);
+    };
+
+    // 先設置事件處理器，再設置 src
+    img.src = booking.image;
+
+    // 如果圖片已經在快取中，使用 setTimeout 確保事件處理器已設置
+    if (img.complete && img.naturalWidth > 0) {
+      // 使用 setTimeout 確保 onload 事件處理器已經設置
+      setTimeout(() => {
+        if (!isCancelled) {
+          handleLoad();
+        }
+      }, 0);
+    }
+
+    return () => {
+      isCancelled = true;
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [booking.image, shouldLoad]);
 
   return (
     <>
@@ -42,12 +86,9 @@ export default function Booking() {
                     "--img-ratio": imageRatio.toString(),
                   }
                 : {}),
-              ...(shouldLoad
-                ? {
-                    backgroundImage: `url('${booking.image}')`,
-                  }
-                : {}),
-              opacity: shouldLoad && isVisible ? 1 : 0,
+              // 只有在圖片完全載入後才設置背景圖片，避免顯示快取的舊圖片
+              backgroundImage: shouldLoad && imageLoaded ? `url('${booking.image}')` : 'none',
+              opacity: shouldLoad && isVisible && imageLoaded ? 1 : 0,
               transition: "opacity 0.8s ease-out",
             } as React.CSSProperties}
           >
