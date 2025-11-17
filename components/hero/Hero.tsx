@@ -19,13 +19,50 @@ export default function Hero() {
   }, [heroImages.length]);
 
   useEffect(() => {
-    // 動態獲取圖片尺寸
+    // 重置狀態，確保切換圖片時不會使用舊的比例
+    setImageRatio(null);
+
+    // 動態獲取圖片尺寸並確保圖片完全載入
     const img = new Image();
-    img.src = currentImage.src;
-    img.onload = () => {
+    let isCancelled = false;
+    
+    const handleLoad = () => {
+      if (isCancelled) return;
+      
+      // 驗證圖片是否正確載入
+      if (img.naturalWidth === 0 || img.naturalHeight === 0) {
+        return;
+      }
+      
       const ratio = img.height / img.width;
       // 高度增加50%，所以比例也要增加50%
       setImageRatio(ratio * 1.5);
+    };
+
+    img.onload = handleLoad;
+    img.onerror = () => {
+      if (isCancelled) return;
+      // 如果圖片載入失敗，使用預設比例避免永遠不顯示
+      setImageRatio(1.5);
+    };
+
+    // 先設置事件處理器，再設置 src
+    img.src = currentImage.src;
+
+    // 如果圖片已經在快取中，使用 setTimeout 確保事件處理器已設置
+    if (img.complete && img.naturalWidth > 0) {
+      // 使用 setTimeout 確保 onload 事件處理器已經設置
+      setTimeout(() => {
+        if (!isCancelled) {
+          handleLoad();
+        }
+      }, 0);
+    }
+
+    return () => {
+      isCancelled = true;
+      img.onload = null;
+      img.onerror = null;
     };
   }, [currentImage.src]);
 
