@@ -73,11 +73,8 @@ export default function Hero() {
         role="img"
         aria-label={currentImage.alt}
         style={{
-          ...(imageRatio
-            ? {
-                "--img-ratio": imageRatio.toString(),
-              }
-            : {}),
+          // 始終設置 --img-ratio，避免圖片載入前後高度跳動
+          "--img-ratio": imageRatio ? imageRatio.toString() : "1.5",
         } as React.CSSProperties}
       ></div>
       <style jsx>{`
@@ -108,6 +105,7 @@ export default function Hero() {
             min-height: 100dvh;
           }
           /* 如果已獲取圖片比例，使用 aspect-ratio 讓容器比例與圖片匹配 */
+          /* 使用穩定的預設值，避免圖片載入前後高度跳動 */
           .hero-container {
             aspect-ratio: 1 / var(--img-ratio, 1.5);
             height: auto;

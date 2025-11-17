@@ -43,6 +43,22 @@ body {
   min-height: calc(var(--vh, 1vh) * 100);
   /* 確保背景色填滿整個視窗，包括過度滾動區域 */
   width: 100%;
+  /* 在移動設備上，確保 body 可以滾動，避免初始載入時的滾動問題 */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* 移動設備：在 FixedViewport 執行前就設置好滾動，避免初始載入時的滾動問題 */
+@media (max-width: 1024px) {
+  html {
+    overflow: hidden;
+    height: 100%;
+  }
+  body {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100%;
+  }
 }
 
 /* 回退：如果不支援 CSS 變數，使用 svh（small viewport height） */
