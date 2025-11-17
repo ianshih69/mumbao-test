@@ -46,19 +46,27 @@ export default function FixedViewport() {
     });
 
     // 監聽視窗大小變化
+    let resizeTimer: number | null = null;
     const handleResize = () => {
-      const currentHeight = window.innerHeight;
-      // 如果當前高度大於記錄的最大高度，更新最大高度
-      // 這樣可以確保使用工具欄隱藏時的最大高度
-      if (currentHeight > maxHeight) {
-        maxHeight = currentHeight;
-        setFixedHeight();
+      // 使用防抖，避免頻繁觸發導致跳動
+      if (resizeTimer) {
+        clearTimeout(resizeTimer);
       }
-      // 如果高度變化較大（可能是工具欄出現/消失），重新設置
-      else if (Math.abs(currentHeight - maxHeight) > 50) {
-        maxHeight = currentHeight;
-        setFixedHeight();
-      }
+      
+      resizeTimer = window.setTimeout(() => {
+        const currentHeight = window.innerHeight;
+        // 如果當前高度大於記錄的最大高度，更新最大高度
+        // 這樣可以確保使用工具欄隱藏時的最大高度
+        if (currentHeight > maxHeight) {
+          maxHeight = currentHeight;
+          setFixedHeight();
+        }
+        // 如果高度變化較大（可能是工具欄出現/消失），重新設置
+        else if (Math.abs(currentHeight - maxHeight) > 50) {
+          maxHeight = currentHeight;
+          setFixedHeight();
+        }
+      }, 100); // 100ms 防抖延遲
     };
 
     // 監聽 orientationchange（螢幕旋轉）
@@ -77,6 +85,10 @@ export default function FixedViewport() {
     return () => {
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", handleOrientationChange);
+      // 清理定時器
+      if (resizeTimer) {
+        clearTimeout(resizeTimer);
+      }
       // 清理樣式
       document.documentElement.style.removeProperty("--vh");
       document.documentElement.style.removeProperty("height");

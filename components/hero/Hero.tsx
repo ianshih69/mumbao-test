@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { getAllHeroImages } from "@/lib/hero";
 
 export default function Hero() {
-  const [imageRatio, setImageRatio] = useState<number | null>(null);
+  const [imageRatio, setImageRatio] = useState<number>(1.5); // 使用預設值，避免 null 導致的跳動
   const [currentIndex, setCurrentIndex] = useState(0);
   const heroImages = getAllHeroImages();
   const currentImage = heroImages[currentIndex];
@@ -19,8 +19,8 @@ export default function Hero() {
   }, [heroImages.length]);
 
   useEffect(() => {
-    // 重置狀態，確保切換圖片時不會使用舊的比例
-    setImageRatio(null);
+    // 不要立即重置 imageRatio，保留舊值直到新圖片載入完成，避免高度跳動
+    // setImageRatio(null); // 移除這行，避免切換圖片時高度跳動
 
     // 動態獲取圖片尺寸並確保圖片完全載入
     const img = new Image();
@@ -74,7 +74,7 @@ export default function Hero() {
         aria-label={currentImage.alt}
         style={{
           // 始終設置 --img-ratio，避免圖片載入前後高度跳動
-          "--img-ratio": imageRatio ? imageRatio.toString() : "1.5",
+          "--img-ratio": imageRatio.toString(),
         } as React.CSSProperties}
       ></div>
       <style jsx>{`

@@ -17,9 +17,11 @@ export default function Page() {
     setMounted(true);
   }, []);
 
-  // 在 hydration 完成前不渲染內容，避免顯示不正確的內容
+  // 在 hydration 完成前渲染佔位符，避免從 null 到有內容的跳動
   if (!mounted) {
-    return null;
+    return (
+      <div style={{ minHeight: "100vh", backgroundColor: "#eed3b2" }} />
+    );
   }
 
   return (
