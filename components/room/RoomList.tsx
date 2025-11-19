@@ -3,13 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination } from "swiper/modules";
+import { Autoplay, Pagination, EffectFade } from "swiper/modules"; // ★ 多加 EffectFade
 import type { Swiper as SwiperType } from "swiper";
 import { roomImageGroups } from "@/lib/room";
 import { useLazyImage } from "@/hooks/useLazyImage";
 
 import "swiper/css";
 import "swiper/css/pagination";
+import "swiper/css/effect-fade"; // ★ 加上淡入淡出樣式
 
 export default function RoomList() {
   const [swiperInstance, setSwiperInstance] = useState<SwiperType | null>(null);
@@ -24,12 +25,10 @@ export default function RoomList() {
     elementRef: sectionRef,
   });
 
-  // 追蹤每張圖片的載入狀態
   const [imageLoadedMap, setImageLoadedMap] = useState<Record<string, boolean>>(
     {}
   );
 
-  // 預載全部圖片
   useEffect(() => {
     const preloadImages = () => {
       roomImageGroups.forEach((group, index) => {
@@ -90,7 +89,6 @@ export default function RoomList() {
     preloadImages();
   }, []);
 
-  // 更新自訂圓點樣式
   useEffect(() => {
     dotsRef.current.forEach((dot, i) => {
       if (!dot) return;
@@ -186,12 +184,14 @@ export default function RoomList() {
           {/* Swiper */}
           <div className="room-list-swiper-wrapper">
             <Swiper
-              modules={[Autoplay, Pagination]}
+              modules={[Autoplay, Pagination, EffectFade]}  // ★ 加上 EffectFade 模組
+              effect="fade"                                 // ★ 使用淡入淡出效果
+              fadeEffect={{ crossFade: true }}             // ★ 前一張淡出 + 下一張淡入
               spaceBetween={0}
               slidesPerView={1}
               loop={true}
               grabCursor={true}
-              speed={500}
+              speed={600}
               watchSlidesProgress={true}
               autoplay={{
                 delay: 3000,
@@ -294,6 +294,7 @@ export default function RoomList() {
         </div>
       </section>
 
+      {/* 原本的 CSS 全留著 */}
       <style jsx>{`
         .room-list-section {
           background-color: #a4835e;
@@ -312,7 +313,6 @@ export default function RoomList() {
           padding: 0 1rem;
         }
 
-        /* 桌機標題列 */
         .room-list-header-desktop {
           display: none;
           position: relative;
@@ -347,14 +347,12 @@ export default function RoomList() {
           background-color: rgba(255, 255, 255, 0.6) !important;
         }
 
-        /* Swiper 本體 */
         .room-list-swiper {
           width: 100%;
           overflow: hidden;
           height: 100%;
         }
 
-        /* 手機端：原本用 60vh，改成固定高度避免工具列影響 */
         @media (max-width: 767px) {
           .room-list-swiper {
             height: auto;
@@ -393,20 +391,17 @@ export default function RoomList() {
           opacity: 0.8;
         }
 
-        /* Swiper 包裝器 */
         .room-list-swiper-wrapper {
           position: relative;
           width: 100%;
         }
 
-        /* 手機端：確保 Swiper 容器有高度 */
         @media (max-width: 767px) {
           .room-list-swiper-wrapper {
             min-height: 420px;
           }
         }
 
-        /* 手機標題列 */
         .room-list-header-mobile {
           display: block;
           margin-bottom: 0.5rem;
@@ -428,7 +423,6 @@ export default function RoomList() {
           margin: 0 0 0.5rem 0;
         }
 
-        /* 手機：圓點和更多連結的容器 */
         .room-list-mobile-controls {
           display: none;
           position: relative;
@@ -450,7 +444,6 @@ export default function RoomList() {
           }
         }
 
-        /* 手機：四個圓點在圖外左上方 */
         .room-list-dots-mobile {
           display: flex;
           flex-direction: row;
@@ -458,7 +451,6 @@ export default function RoomList() {
           gap: 0.375rem;
         }
 
-        /* 圖片網格 */
         .room-list-grid {
           display: grid;
           grid-template-columns: 1fr;
@@ -467,7 +459,6 @@ export default function RoomList() {
           min-height: 0;
         }
 
-        /* 手機端：確保 grid 容器有高度 */
         @media (max-width: 767px) {
           .room-list-grid {
             height: auto;
@@ -493,7 +484,6 @@ export default function RoomList() {
           background-color: #a4835e;
         }
 
-        /* 手機端：移除 aspect-ratio，讓 grid-template-rows 控制高度 */
         @media (max-width: 767px) {
           .room-list-image-left,
           .room-list-image-right {
@@ -523,7 +513,6 @@ export default function RoomList() {
           object-fit: cover;
         }
 
-        /* 桌面端左圖移除 aspect ratio */
         @media (min-width: 768px) {
           .room-list-image-left {
             aspect-ratio: unset !important;
@@ -531,7 +520,6 @@ export default function RoomList() {
           }
         }
 
-        /* 手機："更多 +" 在圖外右上方 */
         .room-list-more-mobile-top {
           display: block;
         }
