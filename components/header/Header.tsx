@@ -235,7 +235,7 @@ export default function Header() {
 
             {/* 右：語系切換 */}
             <div
-              className="relative flex items-center justify-end gap-2"
+              className="relative flex items-center justify-end gap-2 justify-self-end"
               ref={langMenuRef}
             >
               <button
@@ -291,25 +291,32 @@ export default function Header() {
             </div>
           </div>
 
-          {/* 手機版 */}
-          <div className="md:hidden flex justify-between items-center w-full">
-            <MobileMenu />
+          {/* 手機版：logo 絕對置中 */}
+          <div className="md:hidden relative flex items-center w-full">
+            {/* 左：Menu */}
+            <div className="flex items-center flex-none">
+              <MobileMenu />
+            </div>
 
-            <Link
-              href="/"
-              className="flex-1 text中心 select-none translate-y-[2px]"
+            {/* 中：Logo，固定置中 */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <Link href="/" className="inline-block translate-y-[2px]">
+                <Image
+                  src={headerImages.logo}
+                  alt="MUMBAO STAY 慢慢蒔光"
+                  width={200}
+                  height={85}
+                  className="h-[64px] w-auto object-contain"
+                  priority
+                />
+              </Link>
+            </div>
+
+            {/* 右：語系切換 */}
+            <div
+              className="relative flex items-center gap-2 flex-none ml-auto"
+              ref={langMenuRef}
             >
-              <Image
-                src={headerImages.logo}
-                alt="MUMBAO STAY 慢慢蒔光"
-                width={200}
-                height={85}
-                className="h-[64px] md:h-[85px] mx-auto object-contain"
-                priority
-              />
-            </Link>
-
-            <div className="relative flex items-center gap-2">
               <button
                 onClick={() => setIsLangOpen(!isLangOpen)}
                 className="text-[#2B1A10] hover:opacity-70 transition-opacity"
