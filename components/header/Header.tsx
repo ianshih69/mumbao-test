@@ -12,7 +12,13 @@ export default function Header() {
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState("TW");
   const [scrollY, setScrollY] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
+  // 初始化時就判斷是否為手機端，避免首次渲染時使用錯誤的邏輯
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth < 768;
+    }
+    return false;
+  });
 
   const [headerMode, _setHeaderMode] = useState<HeaderMode>("top");
   const headerModeRef = useRef<HeaderMode>("top");
@@ -35,7 +41,8 @@ export default function Header() {
   };
 
   useEffect(() => {
-    const TOP_THRESHOLD = 80; // 視覺上接近頂端就算 top（手機比較容易觸發）
+    const TOP_THRESHOLD = 80; // 視覺上接近頂端就算 top（桌機端）
+    const MOBILE_TOP_THRESHOLD = 5; // 手機端閾值較小，因為 body.scrollTop 在頂部時應該是 0
     const HIDE_DURATION = 300; // 收上去動畫時間 (ms) 要跟 CSS duration 一致
     const PAUSE_DURATION = 100; // 往下時收完停 0.1 秒
     const TOTAL_DOWN_DELAY = HIDE_DURATION + PAUSE_DURATION;
@@ -59,10 +66,30 @@ export default function Header() {
     };
 
     const handleScroll = () => {
-      const currentY = window.scrollY || 0;
+      // 獲取滾動位置：根據滾動容器類型選擇正確的滾動位置
+      // 在小尺寸時，滾動容器是 body（html overflow: hidden, body overflow-y: auto）
+      // 在桌機時，滾動容器是 window
+      let currentY = 0;
+      const isMobileDevice = window.innerWidth < 768;
+      
+      if (isMobileDevice) {
+        // 手機端：優先檢查 body.scrollTop（因為 FixedViewport 設置了 body 滾動）
+        // 注意：document.documentElement.scrollTop 在手機上可能始終 > 0，所以不應該使用
+        currentY = document.body.scrollTop || 0;
+      } else {
+        // 桌機端：優先檢查 window.scrollY
+        currentY = window.scrollY || window.pageYOffset || 0;
+        // 如果 window.scrollY 為 0，再檢查 documentElement.scrollTop
+        if (currentY === 0) {
+          currentY = document.documentElement.scrollTop || 0;
+        }
+      }
+      
       setScrollY(currentY);
 
-      const atTop = currentY <= TOP_THRESHOLD;
+      // 根據設備類型選擇不同的閾值
+      const threshold = isMobileDevice ? MOBILE_TOP_THRESHOLD : TOP_THRESHOLD;
+      const atTop = currentY <= threshold;
       const wasAtTop = lastAtTopRef.current;
       lastAtTopRef.current = atTop;
 
@@ -95,18 +122,42 @@ export default function Header() {
       // 其他只是中間滑動，不跨門檻就什麼都不做
     };
 
+    // 同時監聽 window 和 document.body 的滾動事件
+    // 因為在小尺寸時，滾動容器是 body，所以必須監聽 body 的滾動
     window.addEventListener("scroll", handleScroll, { passive: true });
+    document.body.addEventListener("scroll", handleScroll, { passive: true });
+    document.documentElement.addEventListener("scroll", handleScroll, { passive: true });
 
     // 初始化：決定一開始是不是在頂端
-    const initY = window.scrollY || 0;
+    const isMobileDevice = window.innerWidth < 768;
+    let initY = 0;
+    
+    if (isMobileDevice) {
+      // 手機端：只檢查 body.scrollTop（因為 FixedViewport 設置了 body 滾動）
+      initY = document.body.scrollTop || 0;
+    } else {
+      // 桌機端：優先檢查 window.scrollY
+      initY = window.scrollY || window.pageYOffset || 0;
+      if (initY === 0) {
+        initY = document.documentElement.scrollTop || 0;
+      }
+    }
+    
     setScrollY(initY);
-    lastAtTopRef.current = initY <= TOP_THRESHOLD;
+    // 根據設備類型選擇不同的閾值
+    const threshold = isMobileDevice ? MOBILE_TOP_THRESHOLD : TOP_THRESHOLD;
+    lastAtTopRef.current = initY <= threshold;
     if (lastAtTopRef.current) {
       setHeaderMode("top");
+    } else {
+      // 如果初始化時不在頂部，應該立即顯示背景
+      setHeaderMode("solid");
     }
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      document.body.removeEventListener("scroll", handleScroll);
+      document.documentElement.removeEventListener("scroll", handleScroll);
       cleanupTimers();
     };
   }, []);
@@ -147,23 +198,15 @@ export default function Header() {
   const isHiding =
     headerMode === "hidingToSolid" || headerMode === "hidingToTop";
 
-  // 有背景樣式：solid & 往上收回頂部(hidingToTop) 的時候都保持有背景
+  // 有背景樣式：solid、往下滑過渡(hidingToSolid) & 往上收回頂部(hidingToTop) 的時候都保持有背景
   const useSolidBackground =
-    headerMode === "solid" || headerMode === "hidingToTop";
+    headerMode === "solid" || headerMode === "hidingToSolid" || headerMode === "hidingToTop";
 
-  // 手機端在 top 狀態時也要有背景（不透明），讓 header 看起來是切一塊在 hero 圖上方
-  // 桌機端在 top 狀態時保持透明（維持現有效果）
+  // 所有尺寸共用：top 狀態透明，solid 狀態不透明
   const getBackgroundColor = () => {
-    // 手機端：無論什麼狀態都有背景
-    if (isMobile) {
-      if (!useSolidBackground) {
-        return "rgba(244,210,168,0.96)"; // top 狀態：不透明背景
-      }
-      return "rgba(244,210,168,0.96)"; // solid 狀態：不透明背景
-    }
-    // 桌機端：只在 solid 狀態有背景
-    if (!useSolidBackground) return "transparent";
-    return "rgba(244,210,168,0.96)";
+    // 根據 headerMode 切換，不區分手機/桌機
+    if (!useSolidBackground) return "transparent"; // top 狀態：透明
+    return "rgba(244,210,168,0.96)"; // solid 狀態：不透明背景
   };
 
   // 手機端不使用背景圖片，桌機端在 solid 狀態使用背景圖片
