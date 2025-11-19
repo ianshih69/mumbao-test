@@ -162,11 +162,12 @@ export default function Header() {
   const getBackgroundColor = () =>
     !useSolidBackground ? "transparent" : "rgba(244,210,168,0.96)";
 
+  // 所有尺寸：只要是 solid 狀態就使用同一張 header 背景圖
   const getBackgroundImage = () => {
-    if (isMobile) return "none";
     if (!useSolidBackground) return "none";
     return `url(${headerImages.background})`;
   };
+
 
   return (
     <>
@@ -177,7 +178,8 @@ export default function Header() {
         style={{
           backgroundColor: getBackgroundColor(),
           backgroundImage: getBackgroundImage(),
-          backgroundSize: useSolidBackground && !isMobile ? "cover" : "auto",
+		  backgroundSize: useSolidBackground ? "cover" : "auto",
+          //backgroundSize: useSolidBackground && !isMobile ? "cover" : "auto",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
           boxShadow: useSolidBackground
