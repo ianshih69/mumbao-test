@@ -41,8 +41,6 @@ export default function Header() {
   };
 
   useEffect(() => {
-    const TOP_THRESHOLD = 80; // 視覺上接近頂端就算 top（桌機端）
-    const MOBILE_TOP_THRESHOLD = 5; // 手機端閾值較小，因為 body.scrollTop 在頂部時應該是 0
     const HIDE_DURATION = 300; // 收上去動畫時間 (ms) 要跟 CSS duration 一致
     const PAUSE_DURATION = 100; // 往下時收完停 0.1 秒
     const TOTAL_DOWN_DELAY = HIDE_DURATION + PAUSE_DURATION;
@@ -66,30 +64,12 @@ export default function Header() {
     };
 
     const handleScroll = () => {
-      // 獲取滾動位置：根據滾動容器類型選擇正確的滾動位置
-      // 在小尺寸時，滾動容器是 body（html overflow: hidden, body overflow-y: auto）
-      // 在桌機時，滾動容器是 window
-      let currentY = 0;
-      const isMobileDevice = window.innerWidth < 768;
-      
-      if (isMobileDevice) {
-        // 手機端：優先檢查 body.scrollTop（因為 FixedViewport 設置了 body 滾動）
-        // 注意：document.documentElement.scrollTop 在手機上可能始終 > 0，所以不應該使用
-        currentY = document.body.scrollTop || 0;
-      } else {
-        // 桌機端：優先檢查 window.scrollY
-        currentY = window.scrollY || window.pageYOffset || 0;
-        // 如果 window.scrollY 為 0，再檢查 documentElement.scrollTop
-        if (currentY === 0) {
-          currentY = document.documentElement.scrollTop || 0;
-        }
-      }
-      
+      // 統一使用 window.scrollY 作為滾動位置（所有設備都使用 window 滾動）
+      const currentY = window.scrollY || window.pageYOffset || 0;
       setScrollY(currentY);
 
-      // 根據設備類型選擇不同的閾值
-      const threshold = isMobileDevice ? MOBILE_TOP_THRESHOLD : TOP_THRESHOLD;
-      const atTop = currentY <= threshold;
+      // 簡單明確的判斷：scrollY === 0 時在頂部，scrollY > 0 時不在頂部
+      const atTop = currentY === 0;
       const wasAtTop = lastAtTopRef.current;
       lastAtTopRef.current = atTop;
 
@@ -119,34 +99,29 @@ export default function Header() {
         return;
       }
 
-      // 其他只是中間滑動，不跨門檻就什麼都不做
+      // ✦ 情況 3：如果已經不在頂部，但 headerMode 還是 top，應該設置為 solid
+      // 這可能發生在窗口大小改變或其他情況下，狀態不同步
+      if (!atTop && headerModeRef.current === "top") {
+        cleanupTimers();
+        setHeaderMode("solid");
+        return;
+      }
+      
+      // ✦ 情況 4：如果在頂部，但 headerMode 不是 top，應該設置為 top
+      if (atTop && headerModeRef.current !== "top" && headerModeRef.current !== "hidingToTop") {
+        cleanupTimers();
+        setHeaderMode("top");
+        return;
+      }
     };
 
-    // 同時監聽 window 和 document.body 的滾動事件
-    // 因為在小尺寸時，滾動容器是 body，所以必須監聽 body 的滾動
+    // 只監聽 window 的滾動事件（所有設備統一使用 window 滾動）
     window.addEventListener("scroll", handleScroll, { passive: true });
-    document.body.addEventListener("scroll", handleScroll, { passive: true });
-    document.documentElement.addEventListener("scroll", handleScroll, { passive: true });
 
     // 初始化：決定一開始是不是在頂端
-    const isMobileDevice = window.innerWidth < 768;
-    let initY = 0;
-    
-    if (isMobileDevice) {
-      // 手機端：只檢查 body.scrollTop（因為 FixedViewport 設置了 body 滾動）
-      initY = document.body.scrollTop || 0;
-    } else {
-      // 桌機端：優先檢查 window.scrollY
-      initY = window.scrollY || window.pageYOffset || 0;
-      if (initY === 0) {
-        initY = document.documentElement.scrollTop || 0;
-      }
-    }
-    
+    const initY = window.scrollY || window.pageYOffset || 0;
     setScrollY(initY);
-    // 根據設備類型選擇不同的閾值
-    const threshold = isMobileDevice ? MOBILE_TOP_THRESHOLD : TOP_THRESHOLD;
-    lastAtTopRef.current = initY <= threshold;
+    lastAtTopRef.current = initY === 0;
     if (lastAtTopRef.current) {
       setHeaderMode("top");
     } else {
@@ -156,8 +131,6 @@ export default function Header() {
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      document.body.removeEventListener("scroll", handleScroll);
-      document.documentElement.removeEventListener("scroll", handleScroll);
       cleanupTimers();
     };
   }, []);

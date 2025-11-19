@@ -23,11 +23,13 @@ html {
   /* 確保背景色與頁面最後一個區塊一致（Footer 的背景色），使用 !important 確保優先級 */
   background-color: #eed3b2 !important;
   /* 確保背景色填滿整個視窗，包括過度滾動區域 */
-  height: 100%;
   width: 100%;
+  /* 確保所有設備都使用 window 作為滾動容器 */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
-/* 主要滾動容器：防止抖動，但保持背景色一致以允許輕微彈性 */
+/* 主要滾動容器：使用 window 滾動，不改變滾動容器 */
 body {
   /* 使用與 Footer 一致的背景色，避免過度滾動時看到不同顏色，使用 !important 確保優先級 */
   background: #eed3b2 !important;
@@ -43,22 +45,9 @@ body {
   min-height: calc(var(--vh, 1vh) * 100);
   /* 確保背景色填滿整個視窗，包括過度滾動區域 */
   width: 100%;
-  /* 在移動設備上，確保 body 可以滾動，避免初始載入時的滾動問題 */
-  overflow-y: auto;
+  /* 確保使用 window 滾動，body 不作為滾動容器 */
+  overflow-y: visible;
   overflow-x: hidden;
-}
-
-/* 移動設備：在 FixedViewport 執行前就設置好滾動，避免初始載入時的滾動問題 */
-@media (max-width: 1024px) {
-  html {
-    overflow: hidden;
-    height: 100%;
-  }
-  body {
-    overflow-y: auto;
-    overflow-x: hidden;
-    height: 100%;
-  }
 }
 
 /* 回退：如果不支援 CSS 變數，使用 svh（small viewport height） */
