@@ -126,6 +126,7 @@ export default function RoomList() {
                   ref={(el) => {
                     if (el) {
                       dotsRef.current[i] = el;
+                      // 設置初始樣式，確保所有圓點都有正確的樣式
                       if (i === activeIndex) {
                         el.style.setProperty(
                           "background-color",
@@ -133,6 +134,13 @@ export default function RoomList() {
                           "important"
                         );
                         el.style.transform = "scale(1.25)";
+                      } else {
+                        el.style.setProperty(
+                          "background-color",
+                          "rgba(255, 255, 255, 0.4)",
+                          "important"
+                        );
+                        el.style.transform = "scale(1)";
                       }
                     }
                   }}
