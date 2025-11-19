@@ -8,7 +8,6 @@ import type { Swiper as SwiperType } from "swiper";
 import { roomImageGroups } from "@/lib/room";
 import { useLazyImage } from "@/hooks/useLazyImage";
 
-// 導入 Swiper 樣式
 import "swiper/css";
 import "swiper/css/pagination";
 
@@ -17,23 +16,94 @@ export default function RoomList() {
   const [activeIndex, setActiveIndex] = useState(0);
   const dotsRef = useRef<(HTMLButtonElement | null)[]>([]);
   const sectionRef = useRef<HTMLElement | null>(null);
+
   const { isVisible, shouldLoad } = useLazyImage({
     immediate: false,
     threshold: 0.1,
+    rootMargin: "200px",
     elementRef: sectionRef,
   });
 
-  // 更新圓圈指示器樣式
+  // 追蹤每張圖片的載入狀態
+  const [imageLoadedMap, setImageLoadedMap] = useState<Record<string, boolean>>(
+    {}
+  );
+
+  // 預載全部圖片
+  useEffect(() => {
+    const preloadImages = () => {
+      roomImageGroups.forEach((group, index) => {
+        const leftKey = `left-${index}`;
+        const rightKey = `right-${index}`;
+
+        const leftImg = new window.Image();
+        let leftLoaded = false;
+        leftImg.onload = () => {
+          if (!leftLoaded) {
+            leftLoaded = true;
+            setImageLoadedMap((prev) => ({ ...prev, [leftKey]: true }));
+          }
+        };
+        leftImg.onerror = () => {
+          if (!leftLoaded) {
+            leftLoaded = true;
+            setImageLoadedMap((prev) => ({ ...prev, [leftKey]: true }));
+          }
+        };
+        leftImg.src = group.left;
+
+        const rightImg = new window.Image();
+        let rightLoaded = false;
+        rightImg.onload = () => {
+          if (!rightLoaded) {
+            rightLoaded = true;
+            setImageLoadedMap((prev) => ({ ...prev, [rightKey]: true }));
+          }
+        };
+        rightImg.onerror = () => {
+          if (!rightLoaded) {
+            rightLoaded = true;
+            setImageLoadedMap((prev) => ({ ...prev, [rightKey]: true }));
+          }
+        };
+        rightImg.src = group.right;
+
+        if (leftImg.complete && leftImg.naturalWidth > 0) {
+          setTimeout(() => {
+            if (!leftLoaded) {
+              leftLoaded = true;
+              setImageLoadedMap((prev) => ({ ...prev, [leftKey]: true }));
+            }
+          }, 0);
+        }
+        if (rightImg.complete && rightImg.naturalWidth > 0) {
+          setTimeout(() => {
+            if (!rightLoaded) {
+              rightLoaded = true;
+              setImageLoadedMap((prev) => ({ ...prev, [rightKey]: true }));
+            }
+          }, 0);
+        }
+      });
+    };
+
+    preloadImages();
+  }, []);
+
+  // 更新自訂圓點樣式
   useEffect(() => {
     dotsRef.current.forEach((dot, i) => {
-      if (dot) {
-        if (i === activeIndex) {
-          dot.style.setProperty("background-color", "white", "important");
-          dot.style.transform = "scale(1.25)";
-        } else {
-          dot.style.setProperty("background-color", "rgba(255, 255, 255, 0.4)", "important");
-          dot.style.transform = "scale(1)";
-        }
+      if (!dot) return;
+      if (i === activeIndex) {
+        dot.style.setProperty("background-color", "white", "important");
+        dot.style.transform = "scale(1.25)";
+      } else {
+        dot.style.setProperty(
+          "background-color",
+          "rgba(255, 255, 255, 0.4)",
+          "important"
+        );
+        dot.style.transform = "scale(1)";
       }
     });
   }, [activeIndex]);
@@ -42,9 +112,8 @@ export default function RoomList() {
     <>
       <section className="room-list-section" ref={sectionRef}>
         <div className="room-list-container">
-          {/* 桌面端標題列：上左圓圈、上中標題、上右更多連結 */}
+          {/* 桌機 header */}
           <div className="room-list-header-desktop">
-            {/* 上左：4個圓圈分頁指示器 */}
             <div className="room-list-dots">
               {roomImageGroups.map((_, i) => (
                 <button
@@ -59,13 +128,13 @@ export default function RoomList() {
                   ref={(el) => {
                     if (el) {
                       dotsRef.current[i] = el;
-                      // 立即設置初始狀態
                       if (i === activeIndex) {
-                        el.style.setProperty("background-color", "white", "important");
+                        el.style.setProperty(
+                          "background-color",
+                          "white",
+                          "important"
+                        );
                         el.style.transform = "scale(1.25)";
-                      } else {
-                        el.style.setProperty("background-color", "rgba(255, 255, 255, 0.4)", "important");
-                        el.style.transform = "scale(1)";
                       }
                     }
                   }}
@@ -73,23 +142,20 @@ export default function RoomList() {
               ))}
             </div>
 
-            {/* 上中：房型標題（絕對居中） */}
             <h2 className="room-list-title-center">房型</h2>
 
-            {/* 上右：更多+連結 */}
-            <Link href="/rooms" className="room-list-more-link" style={{ color: "white" }}>
+            <Link href="/rooms" className="room-list-more-link">
               更多 ＋
             </Link>
           </div>
 
-          {/* 移動端：房型標題 */}
+          {/* 手機標題 */}
           <div className="room-list-header-mobile">
             <h2 className="room-list-title-mobile">房型</h2>
           </div>
 
-          {/* 移動端：圓點和更多連結的容器 */}
+          {/* 手機：圓點 + 更多 */}
           <div className="room-list-mobile-controls">
-            {/* 移動端：四個圓點在圖外左上方 */}
             <div className="room-list-dots-mobile">
               {roomImageGroups.map((_, i) => (
                 <button
@@ -104,111 +170,130 @@ export default function RoomList() {
                   ref={(el) => {
                     if (el) {
                       dotsRef.current[i] = el;
-                      // 立即設置初始狀態
-                      if (i === activeIndex) {
-                        el.style.setProperty("background-color", "white", "important");
-                        el.style.transform = "scale(1.25)";
-                      } else {
-                        el.style.setProperty("background-color", "rgba(255, 255, 255, 0.4)", "important");
-                        el.style.transform = "scale(1)";
-                      }
                     }
                   }}
                 />
               ))}
             </div>
 
-            {/* 移動端："更多 +" 在圖外右上方 */}
             <div className="room-list-more-mobile-top">
-              <Link href="/rooms" className="room-list-more-link-mobile" style={{ color: "white" }}>
+              <Link href="/rooms" className="room-list-more-link-mobile">
                 更多 ＋
               </Link>
             </div>
           </div>
 
-          {/* 兩欄圖片 - 使用 Swiper */}
+          {/* Swiper */}
           <div className="room-list-swiper-wrapper">
             <Swiper
-            modules={[Autoplay, Pagination]}
-            spaceBetween={0}
-            slidesPerView={1}
-            loop={true}
-            grabCursor={true}
-            speed={500}
-            watchSlidesProgress={true}
-            autoplay={{
-              delay: 3000,
-              disableOnInteraction: false,
-            }}
-            pagination={{
-              el: ".room-list-swiper-pagination",
-              clickable: true,
-              bulletClass: "room-list-pagination-bullet",
-              bulletActiveClass: "room-list-pagination-bullet-active",
-            }}
-            onSwiper={(swiper) => {
-              setSwiperInstance(swiper);
-              // 初始化時設置正確的索引
-              setActiveIndex(swiper.realIndex);
-            }}
-            onSlideChange={(swiper) => {
-              // 處理 loop 模式下的真實索引
-              const realIndex = swiper.realIndex;
-              setActiveIndex(realIndex);
-            }}
-            onSlideChangeTransitionStart={(swiper) => {
-              // 在切換開始時也更新索引，確保及時更新
-              const realIndex = swiper.realIndex;
-              setActiveIndex(realIndex);
-            }}
-            className="room-list-swiper"
-          >
-            {roomImageGroups.map((g, i) => (
-              <SwiperSlide key={i} className="room-list-slide">
-                <div className="room-list-grid">
-                  {/* Left image: 3:4 直式 */}
-                  <div className="room-list-image-left">
-                    {shouldLoad && (
-                      <img
-                        src={g.left}
-                        alt={`房型圖片 ${i + 1} - 左`}
-                        loading="lazy"
-                        decoding="async"
-                        className="room-list-image"
-                        style={{
-                          opacity: isVisible ? 1 : 0,
-                          transition: "opacity 0.8s ease-out",
-                        }}
-                      />
-                    )}
-                  </div>
+              modules={[Autoplay, Pagination]}
+              spaceBetween={0}
+              slidesPerView={1}
+              loop={true}
+              grabCursor={true}
+              speed={500}
+              watchSlidesProgress={true}
+              autoplay={{
+                delay: 3000,
+                disableOnInteraction: false,
+              }}
+              pagination={{
+                el: ".room-list-swiper-pagination",
+                clickable: true,
+                bulletClass: "room-list-pagination-bullet",
+                bulletActiveClass: "room-list-pagination-bullet-active",
+              }}
+              onSwiper={(swiper) => {
+                setSwiperInstance(swiper);
+                setActiveIndex(swiper.realIndex);
+              }}
+              onSlideChange={(swiper) => {
+                setActiveIndex(swiper.realIndex);
+              }}
+              className="room-list-swiper"
+            >
+              {roomImageGroups.map((g, i) => {
+                const leftKey = `left-${i}`;
+                const rightKey = `right-${i}`;
+                const leftLoaded = imageLoadedMap[leftKey] ?? false;
+                const rightLoaded = imageLoadedMap[rightKey] ?? false;
 
-                  {/* Right image: 5:3 橫式 */}
-                  <div className="room-list-image-right">
-                    {shouldLoad && (
-                      <img
-                        src={g.right}
-                        alt={`房型圖片 ${i + 1} - 右`}
-                        loading="lazy"
-                        decoding="async"
-                        className="room-list-image"
-                        style={{
-                          opacity: isVisible ? 1 : 0,
-                          transition: "opacity 0.8s ease-out",
-                        }}
-                      />
-                    )}
-                  </div>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+                return (
+                  <SwiperSlide key={i} className="room-list-slide">
+                    <div className="room-list-grid">
+                      {/* 左圖 */}
+                      <div className="room-list-image-left">
+                        <img
+                          src={g.left}
+                          alt={`房型圖片 ${i + 1} - 左`}
+                          loading="eager"
+                          decoding="async"
+                          className="room-list-image"
+                          onLoad={() => {
+                            setImageLoadedMap((prev) =>
+                              prev[leftKey]
+                                ? prev
+                                : { ...prev, [leftKey]: true }
+                            );
+                          }}
+                          onError={() => {
+                            setImageLoadedMap((prev) =>
+                              prev[leftKey]
+                                ? prev
+                                : { ...prev, [leftKey]: true }
+                            );
+                          }}
+                          style={{
+                            opacity:
+                              shouldLoad && isVisible && leftLoaded ? 1 : 0,
+                            transition: "opacity 0.8s ease-out",
+                          }}
+                        />
+                      </div>
+
+                      {/* 右圖 */}
+                      <div className="room-list-image-right">
+                        <img
+                          src={g.right}
+                          alt={`房型圖片 ${i + 1} - 右`}
+                          loading="eager"
+                          decoding="async"
+                          className="room-list-image"
+                          onLoad={() => {
+                            setImageLoadedMap((prev) =>
+                              prev[rightKey]
+                                ? prev
+                                : { ...prev, [rightKey]: true }
+                            );
+                          }}
+                          onError={() => {
+                            setImageLoadedMap((prev) =>
+                              prev[rightKey]
+                                ? prev
+                                : { ...prev, [rightKey]: true }
+                            );
+                          }}
+                          style={{
+                            opacity:
+                              shouldLoad && isVisible && rightLoaded ? 1 : 0,
+                            transition: "opacity 0.8s ease-out",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </SwiperSlide>
+                );
+              })}
+            </Swiper>
           </div>
 
-          {/* Swiper 分頁指示器（隱藏，因為我們用自定義的圓圈） */}
-          <div className="room-list-swiper-pagination" style={{ display: "none" }}></div>
+          <div
+            className="room-list-swiper-pagination"
+            style={{ display: "none" }}
+          ></div>
         </div>
       </section>
+
       <style jsx>{`
         .room-list-section {
           background-color: #a4835e;
@@ -227,7 +312,7 @@ export default function RoomList() {
           padding: 0 1rem;
         }
 
-        /* 桌面端標題列 */
+        /* 桌機標題列 */
         .room-list-header-desktop {
           display: none;
           position: relative;
@@ -262,20 +347,20 @@ export default function RoomList() {
           background-color: rgba(255, 255, 255, 0.6) !important;
         }
 
-         /* Swiper 相關樣式 */
-         .room-list-swiper {
-           width: 100%;
-           overflow: hidden;
-           height: 100%;
-         }
+        /* Swiper 本體 */
+        .room-list-swiper {
+          width: 100%;
+          overflow: hidden;
+          height: 100%;
+        }
 
-         /* 手機端：確保 Swiper 有高度 */
-         @media (max-width: 767px) {
-           .room-list-swiper {
-             height: auto;
-             min-height: 60vh;
-           }
-         }
+        /* 手機端：原本用 60vh，改成固定高度避免工具列影響 */
+        @media (max-width: 767px) {
+          .room-list-swiper {
+            height: auto;
+            min-height: 420px;
+          }
+        }
 
         .room-list-slide {
           width: 100%;
@@ -308,20 +393,20 @@ export default function RoomList() {
           opacity: 0.8;
         }
 
-         /* Swiper 包裝器 */
-         .room-list-swiper-wrapper {
-           position: relative;
-           width: 100%;
-         }
+        /* Swiper 包裝器 */
+        .room-list-swiper-wrapper {
+          position: relative;
+          width: 100%;
+        }
 
-         /* 手機端：確保 Swiper 容器有高度 */
-         @media (max-width: 767px) {
-           .room-list-swiper-wrapper {
-             min-height: 60vh;
-           }
-         }
+        /* 手機端：確保 Swiper 容器有高度 */
+        @media (max-width: 767px) {
+          .room-list-swiper-wrapper {
+            min-height: 420px;
+          }
+        }
 
-        /* 移動端標題列 */
+        /* 手機標題列 */
         .room-list-header-mobile {
           display: block;
           margin-bottom: 0.5rem;
@@ -343,7 +428,7 @@ export default function RoomList() {
           margin: 0 0 0.5rem 0;
         }
 
-        /* 移動端：圓點和更多連結的容器 */
+        /* 手機：圓點和更多連結的容器 */
         .room-list-mobile-controls {
           display: none;
           position: relative;
@@ -365,7 +450,7 @@ export default function RoomList() {
           }
         }
 
-        /* 移動端：四個圓點在圖外左上方 */
+        /* 手機：四個圓點在圖外左上方 */
         .room-list-dots-mobile {
           display: flex;
           flex-direction: row;
@@ -373,24 +458,22 @@ export default function RoomList() {
           gap: 0.375rem;
         }
 
-         /* 圖片網格 */
-         .room-list-grid {
-           display: grid;
-           grid-template-columns: 1fr;
-           /* 手機端：上圖高度減少 1/4 後再增加 1/3 (2.25 * 4/3 = 3)，下圖高度增加 1/4 (4 * 5/4 = 5) */
-           grid-template-rows: 3fr 5fr;
-           gap: 0.75rem;
-           /* 確保 grid 有足夠的高度 */
-           min-height: 0;
-         }
+        /* 圖片網格 */
+        .room-list-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          grid-template-rows: 3fr 5fr;
+          gap: 0.75rem;
+          min-height: 0;
+        }
 
-         /* 手機端：確保 grid 容器有高度 */
-         @media (max-width: 767px) {
-           .room-list-grid {
-             height: auto;
-             min-height: 60vh;
-           }
-         }
+        /* 手機端：確保 grid 容器有高度 */
+        @media (max-width: 767px) {
+          .room-list-grid {
+            height: auto;
+            min-height: 420px;
+          }
+        }
 
         @media (min-width: 768px) {
           .room-list-grid {
@@ -400,37 +483,37 @@ export default function RoomList() {
           }
         }
 
-         .room-list-image-left,
-         .room-list-image-right {
-           position: relative;
-           width: 100%;
-           min-width: 0;
-           overflow: hidden;
-           border: 1px solid white;
-           background-color: #a4835e;
-         }
+        .room-list-image-left,
+        .room-list-image-right {
+          position: relative;
+          width: 100%;
+          min-width: 0;
+          overflow: hidden;
+          border: 1px solid white;
+          background-color: #a4835e;
+        }
 
-         /* 手機端：移除 aspect-ratio，讓 grid-template-rows 控制高度 */
-         @media (max-width: 767px) {
-           .room-list-image-left,
-           .room-list-image-right {
-             aspect-ratio: unset !important;
-             height: 100% !important;
-             width: 100% !important;
-           }
-         }
+        /* 手機端：移除 aspect-ratio，讓 grid-template-rows 控制高度 */
+        @media (max-width: 767px) {
+          .room-list-image-left,
+          .room-list-image-right {
+            aspect-ratio: unset !important;
+            height: 100% !important;
+            width: 100% !important;
+          }
+        }
 
-         @media (min-width: 768px) {
-           .room-list-image-left {
-             aspect-ratio: 3 / 4;
-             height: 100%;
-           }
+        @media (min-width: 768px) {
+          .room-list-image-left {
+            aspect-ratio: 3 / 4;
+            height: 100%;
+          }
 
-           .room-list-image-right {
-             aspect-ratio: 5 / 3;
-             height: 100%;
-           }
-         }
+          .room-list-image-right {
+            aspect-ratio: 5 / 3;
+            height: 100%;
+          }
+        }
 
         .room-list-image {
           position: absolute;
@@ -448,7 +531,7 @@ export default function RoomList() {
           }
         }
 
-        /* 移動端："更多 +" 在圖外右上方 */
+        /* 手機："更多 +" 在圖外右上方 */
         .room-list-more-mobile-top {
           display: block;
         }
@@ -467,4 +550,3 @@ export default function RoomList() {
     </>
   );
 }
-
