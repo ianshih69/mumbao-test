@@ -150,7 +150,7 @@ export default function RoomList() {
 
             <h2 className="room-list-title-center">房型</h2>
 
-            <Link href="/rooms" className="room-list-more-link">
+            <Link href="/rooms" className="room-list-more-link text-white">
               更多 ＋
             </Link>
           </div>
@@ -183,7 +183,7 @@ export default function RoomList() {
             </div>
 
             <div className="room-list-more-mobile-top">
-              <Link href="/rooms" className="room-list-more-link-mobile">
+              <Link href="/rooms" className="room-list-more-link-mobile text-white">
                 更多 ＋
               </Link>
             </div>
@@ -389,7 +389,7 @@ export default function RoomList() {
         }
 
         .room-list-more-link {
-          color: white !important;
+          color: #ffffff !important;
           text-decoration: none;
           font-size: 1rem;
           transition: opacity 0.3s ease;
@@ -533,7 +533,7 @@ export default function RoomList() {
         }
 
         .room-list-more-link-mobile {
-          color: white !important;
+          color: #ffffff !important;
           text-decoration: none;
           font-size: 0.875rem;
           transition: opacity 0.3s ease;
