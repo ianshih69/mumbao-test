@@ -96,7 +96,7 @@ export default function MobileMenu() {
                   {/* ② 這個 div 控制文字位置與線的距離 */}
                   <div
                     className="border-b border-[#7C4420]/25 text-[18px] leading-relaxed text-[#2B1A10] hover:bg-[#F6D9B5]/70 active:bg-[#F1C993] transition-colors"
-                    style={{ padding: "14px 32px 14px 64px" }} // 左 64px、上下 14px
+                    style={{ padding: "14px 32px 14px 32px" }} // 左 64px、上下 14px
                   >
                     {item.label}
                   </div>
