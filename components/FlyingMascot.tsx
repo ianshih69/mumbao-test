@@ -89,7 +89,7 @@ export default function FlyingMascot() {
         <img
           src="/images/cloud.webp"
           alt="cloud"
-          className="block w-[65%] h-auto mx-auto animate-pulse-slow"
+          className="block w-[65%] h-auto mx-auto animate-pulse-slow relative z-0"
           loading="lazy"
           decoding="async"
         />
@@ -97,8 +97,11 @@ export default function FlyingMascot() {
         <img
           src="/images/dog.webp"
           alt="dog"
-          className="absolute left-1/2 bottom-[50%] w-[50%] h-auto"
-          style={{ transform: "translateX(-50%)" }}
+          className="absolute left-1/2 w-[50%] h-auto z-10"
+          style={{ 
+            transform: "translateX(-88%)",
+            bottom: "calc(50% + 0px)"
+          }}
           loading="lazy"
           decoding="async"
         />
