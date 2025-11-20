@@ -258,7 +258,7 @@ export default function NewsList() {
 
         .slide-container .latest-news-title {
           position: absolute !important;
-          top: 20px !important;
+          top: 35px !important;
           left: 50% !important;
           transform: translateX(-50%) !important;
           z-index: 20 !important;
