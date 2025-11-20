@@ -1,8 +1,18 @@
 @import "tailwindcss";
 
+/* ===== 主題色系 (美拉德系) ===== */
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --bg-main: #B97233;       /* 主背景：焦糖橘 */
+  --bg-card: #EED3B2;       /* 卡片底：奶焦色 */
+  --bg-header: #FAE8D0;     /* Header 背景：奶油米白 */
+  --text-main: #2B1A10;     /* 主文字：深咖啡 */
+  --title-main: #5E2C0E;    /* 標題與Header文字：焦糖棕 */
+  --border-main: #7C4420;   /* 邊框：焦糖棕 */
+  --accent-main: #F0A245;   /* 強調橘／按鈕底色 */
+  --tag-bg: #F8E2C1;        /* 標籤底：奶霜蜂蜜 */
+  --tag-text: #5A3412;      /* 標籤文字：咖啡棕 */
 }
 
 @theme inline {
@@ -69,4 +79,18 @@ body {
   body {
     min-height: 100vh;
   }
+}
+
+/* 確保 MobileMenu 選單背景不透明 */
+#mobile-menu-drawer,
+.mobile-menu-drawer {
+  background-color: #FAE8D0 !important;
+  background: #FAE8D0 !important;
+  opacity: 1 !important;
+}
+
+/* 確保選單內部元素也有正確的背景 */
+#mobile-menu-drawer > *,
+.mobile-menu-drawer > * {
+  background-color: transparent !important;
 }
