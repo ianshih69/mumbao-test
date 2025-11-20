@@ -94,3 +94,19 @@ body {
 .mobile-menu-drawer > * {
   background-color: transparent !important;
 }
+
+/* ===== 全螢幕背景特效 CSS ===== */
+
+/* 角色導航特效：雲朵上下浮動動畫 */
+@keyframes pulse-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 5s ease-in-out infinite;
+}

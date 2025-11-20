@@ -2,6 +2,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import FixedViewport from "@/components/FixedViewport";
+import MeteorShower from "@/components/MeteorShower";
+import FlyingMascot from "@/components/FlyingMascot";
 
 export const metadata: Metadata = { title: "My app", description: "" };
 
@@ -10,6 +12,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="zh-Hant" style={{ backgroundColor: "#eed3b2", height: "100%" }}>
       <body>
         <FixedViewport />
+        <MeteorShower intensity={500} showBackground={false} />
+        <FlyingMascot />
         {children}
       </body>
     </html>
