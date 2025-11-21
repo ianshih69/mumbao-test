@@ -237,28 +237,8 @@ export default function RoomList() {
                           loading="eager"
                           decoding="async"
                           className="room-list-image"
-                          onLoad={() => {
-                            setImageLoadedMap((prev) =>
-                              prev[leftKey]
-                                ? prev
-                                : { ...prev, [leftKey]: true }
-                            );
-                          }}
-                          onError={() => {
-                            setImageLoadedMap((prev) =>
-                              prev[leftKey]
-                                ? prev
-                                : { ...prev, [leftKey]: true }
-                            );
-                          }}
-                          style={{
-                            opacity:
-                              shouldLoad && isVisible && leftLoaded ? 1 : 0,
-                            transition: "opacity 0.8s ease-out",
-                          }}
                         />
                       </div>
-
                       {/* 右圖 */}
                       <div className="room-list-image-right">
                         <img
@@ -267,25 +247,6 @@ export default function RoomList() {
                           loading="eager"
                           decoding="async"
                           className="room-list-image"
-                          onLoad={() => {
-                            setImageLoadedMap((prev) =>
-                              prev[rightKey]
-                                ? prev
-                                : { ...prev, [rightKey]: true }
-                            );
-                          }}
-                          onError={() => {
-                            setImageLoadedMap((prev) =>
-                              prev[rightKey]
-                                ? prev
-                                : { ...prev, [rightKey]: true }
-                            );
-                          }}
-                          style={{
-                            opacity:
-                              shouldLoad && isVisible && rightLoaded ? 1 : 0,
-                            transition: "opacity 0.8s ease-out",
-                          }}
                         />
                       </div>
                     </div>
@@ -410,6 +371,7 @@ export default function RoomList() {
           }
         }
 
+
         .room-list-header-mobile {
           display: block;
           margin-bottom: 0.5rem;
@@ -527,6 +489,7 @@ export default function RoomList() {
             height: 100% !important;
           }
         }
+
 
         .room-list-more-mobile-top {
           display: block;
