@@ -49,7 +49,7 @@ body {
   /* 使用 overscroll-behavior-y: contain，允許輕微彈性但防止傳播 */
   overscroll-behavior-y: contain;
   /* 防止 iOS Safari 的橡皮筋效果 */
-  -webkit-overflow-scrolling: touch;
+  /* -webkit-overflow-scrolling: touch; */
   /* 使用 CSS 變數 --vh（由 FixedViewport 組件設置）避免工具欄出現/消失時的高度變化 */
   /* 優先使用 JavaScript 設置的固定高度 */
   min-height: calc(var(--vh, 1vh) * 100);
