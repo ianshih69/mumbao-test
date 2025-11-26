@@ -1,126 +1,122 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { getAllHeroImages } from "@/lib/hero";
 
-// 淡入淡出時間（毫秒），您可以根據需求調整
-const FADE_DURATION_MS = 800; 
+// 淡入淡出時間（毫秒）
+const FADE_DURATION_MS = 1500;
+// 每張圖停留時間（毫秒）
+const DISPLAY_DURATION_MS = 5000;
+// 手機端防閃爍緩衝時間 (關鍵修正)
+const MOBILE_BUFFER_MS = 200;
 
 export default function Hero() {
+  // 使用 useMemo 確保圖片陣列穩定
+  const heroImages = useMemo(() => getAllHeroImages(), []);
+
+  // 1. 狀態管理
+  const [baseIndex, setBaseIndex] = useState(0);
+  const [overlayIndex, setOverlayIndex] = useState(1 % heroImages.length);
+  const [overlayOpacity, setOverlayOpacity] = useState(0);
+  const [transitionEnabled, setTransitionEnabled] = useState(false);
+  
+  // 圖片比例
   const [imageRatio, setImageRatio] = useState<number>(1.5);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  
-  // 新增：控制淡出狀態。true = 頂層圖片 (新圖) opacity: 0
-  const [isFadingOut, setIsFadingOut] = useState(false);
-  
-  const heroImages = getAllHeroImages();
-  const currentImage = heroImages[currentIndex];
-  
-  // 新增：儲存上一張已載入圖片的 src，作為過渡期間的底層圖片
-  const [transitionSrc, setTransitionSrc] = useState(currentImage.src);
 
-  // 1. 圖片自動切換邏輯 (每 5 秒)
+  // 2. 自動輪播核心邏輯
   useEffect(() => {
-    // 總循環時間 = 5秒顯示 + 淡出時間
-    const interval = setInterval(() => {
-      
-      // 步驟 1: 觸發淡出動畫
-      // 頂層圖片 (currentImage.src) 將開始從 opacity: 1 過渡到 opacity: 0
-      setIsFadingOut(true);
+    if (heroImages.length <= 1) return;
 
-      // 步驟 2: 在淡出時間結束後，切換到下一張圖片
-      const switchIndexTimer = setTimeout(() => {
-        // 真正切換圖片索引 (觸發下一個 useEffect)
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % heroImages.length);
+    let fadeTimer: NodeJS.Timeout;
+    let resetTimer: NodeJS.Timeout;
+    let bufferTimer: NodeJS.Timeout;
+
+    const loopTimer = setInterval(() => {
+      // --- 步驟 A: 開始淡入下一張圖 ---
+      setTransitionEnabled(true);
+      setOverlayOpacity(1);
+
+      // --- 步驟 B: 淡入結束後的重置工作 ---
+      resetTimer = setTimeout(() => {
+        // 1. 先把底層換成新圖 (此時頂層還是 100% 不透明，擋著底層)
+        setBaseIndex((prev) => (prev + 1) % heroImages.length);
+        
+        // 2. 【關鍵修正】不要立刻隱藏頂層！
+        // 給手機瀏覽器一點時間 (MOBILE_BUFFER_MS) 去解碼和渲染底層的新圖
+        bufferTimer = setTimeout(() => {
+          // 3. 瞬間關閉動畫，準備重置
+          setTransitionEnabled(false);
+          
+          // 4. 這時候底層肯定畫好了，現在隱藏頂層才安全
+          setOverlayOpacity(0);
+          
+          // 5. 準備下下一張圖給頂層
+          setOverlayIndex((prev) => (prev + 1) % heroImages.length);
+        }, MOBILE_BUFFER_MS);
+
       }, FADE_DURATION_MS);
 
-      return () => clearTimeout(switchIndexTimer);
-
-    }, 5000 + FADE_DURATION_MS); // 總切換時間 = 5秒顯示 + 800ms淡出
-
-    return () => clearInterval(interval);
-  }, [heroImages.length]);
-
-  // 2. 圖片載入和比例計算邏輯 (在新圖片切換後執行)
-  useEffect(() => {
-    const img = new Image();
-    let isCancelled = false;
-    
-    const handleLoad = () => {
-      if (isCancelled) return;
-      
-      if (img.naturalWidth === 0 || img.naturalHeight === 0) {
-        setIsFadingOut(false);
-        return;
-      }
-      
-      const ratio = img.height / img.width;
-      // 高度增加50%，所以比例也要增加50%
-      setImageRatio(ratio * 1.5);
-      
-      // 步驟 3: 新圖片載入完成，開始淡入
-      // 設為 false，頂層圖片 (新圖) 將從 opacity: 0 過渡到 opacity: 100
-      setIsFadingOut(false);
-      
-      // 步驟 4: 更新底層圖片，為下一次切換做準備
-      setTransitionSrc(currentImage.src);
-    };
-
-    img.onload = handleLoad;
-    img.onerror = () => {
-      if (isCancelled) return;
-      setImageRatio(1.5);
-      setIsFadingOut(false);
-      setTransitionSrc(currentImage.src);
-    };
-
-    // 先設置事件處理器，再設置 src
-    img.src = currentImage.src;
-
-    if (img.complete && img.naturalWidth > 0) {
-      setTimeout(() => {
-        if (!isCancelled) {
-          handleLoad();
-        }
-      }, 0);
-    }
+    }, DISPLAY_DURATION_MS + FADE_DURATION_MS);
 
     return () => {
-      isCancelled = true;
-      img.onload = null;
-      img.onerror = null;
+      clearInterval(loopTimer);
+      clearTimeout(fadeTimer);
+      clearTimeout(resetTimer);
+      clearTimeout(bufferTimer);
     };
-  }, [currentImage.src]);
+  }, [heroImages.length]);
 
-  // 為了實現淡入淡出，我們需要將原來的 .hero-container 變成一個包裹層 (.hero-wrapper)，
-  // 並在內部放置兩個 div 來實現圖片層疊效果。
+  // 3. 比例計算 (保持不變)
+  useEffect(() => {
+    if (heroImages.length === 0) return;
+    const currentSrc = heroImages[baseIndex].src;
+    const img = new Image();
+    img.src = currentSrc;
+    img.onload = () => {
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        setImageRatio(img.height / img.width * 1.5);
+      }
+    };
+  }, [baseIndex, heroImages]);
+
+  // 4. 預載頂層圖片 (防止淡入時黑畫面)
+  useEffect(() => {
+     if (heroImages.length === 0) return;
+     const nextSrc = heroImages[overlayIndex].src;
+     const img = new Image();
+     img.src = nextSrc;
+  }, [overlayIndex, heroImages]);
+
+  if (!heroImages.length) return null;
+
   return (
     <div
       className="hero-wrapper relative"
-      role="img"
-      aria-label={currentImage.alt}
       style={{
         "--img-ratio": imageRatio.toString(),
       } as React.CSSProperties}
     >
-      {/* 1. 底層：始終顯示舊圖或前一張圖 (用於過渡時的穩定背景) */}
+      {/* 層 1: 底層 (Base) */}
       <div
         className="hero-container-base"
         style={{
-          backgroundImage: `url('${transitionSrc}')`,
+          backgroundImage: `url('${heroImages[baseIndex].src}')`,
         }}
+        role="img"
+        aria-label={heroImages[baseIndex].alt}
       ></div>
       
-      {/* 2. 頂層：顯示新圖，並控制淡入淡出 */}
+      {/* 層 2: 頂層 (Overlay) */}
       <div
-        className={`hero-container-active ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}
+        className="hero-container-overlay"
         style={{
-          backgroundImage: `url('${currentImage.src}')`,
+          backgroundImage: `url('${heroImages[overlayIndex].src}')`,
+          opacity: overlayOpacity,
+          transition: transitionEnabled ? `opacity ${FADE_DURATION_MS}ms ease-in-out` : 'none',
         }}
       ></div>
 
       <style jsx>{`
-        /* 容器通用設定 (取代原來的 .hero-container) */
         .hero-wrapper {
           position: relative;
           width: 100%;
@@ -128,12 +124,12 @@ export default function Hero() {
           min-height: 100vh;
           overflow: hidden;
           display: block;
-          z-index: 1; /* 確保 Hero 在 Header 下方，但背景圖能顯示 */
+          z-index: 1;
+          background-color: #000; /* 防止圖片載入前的白底 */
         }
 
-        /* 圖片層通用設定 */
         .hero-container-base,
-        .hero-container-active {
+        .hero-container-overlay {
           position: absolute;
           top: 0;
           left: 0;
@@ -142,59 +138,52 @@ export default function Hero() {
           background-size: cover;
           background-position: center center;
           background-repeat: no-repeat;
-          background-attachment: scroll;
+          /* 強制開啟 GPU 加速，解決手機端渲染閃爍 */
+          transform: translateZ(0); 
+          will-change: opacity;
         }
 
-        /* 淡入淡出效果：只應用在頂層圖片 */
-        .hero-container-active {
-          transition: opacity ${FADE_DURATION_MS}ms ease-in-out;
-          z-index: 2; 
-        }
-
-        /* 確保底圖層在頂層之下 */
         .hero-container-base {
           z-index: 1; 
         }
+        
+        .hero-container-overlay {
+          z-index: 2;
+        }
 
-        /* ===== 響應式佈局 (從原程式碼複製並調整父容器名稱) ===== */
+        /* ===== 響應式佈局 (嚴格保留您的手機版設定) ===== */
         @supports not (height: 100dvh) {
           .hero-wrapper {
             height: 100vh;
           }
         }
         
-        /* 手機端和平板電腦端：使用圖片比例來設置容器高度，完整顯示圖片 */
+        /* 手機與平板 */
         @media screen and (max-width: 1024px) {
           .hero-wrapper {
             height: auto;
             min-height: 100dvh;
-          }
-          /* 如果已獲取圖片比例，使用 aspect-ratio 讓容器比例與圖片匹配 */
-          .hero-wrapper {
             aspect-ratio: 1 / var(--img-ratio, 1.5);
-            height: auto;
-            min-height: 0;
+            /* 允許高度彈性 */
+            min-height: 0; 
           }
 
-          /* 在小螢幕上，確保背景尺寸是 100% 100% 以符合 aspect-ratio */
           .hero-container-base,
-          .hero-container-active {
-             background-size: 100% 100%;
+          .hero-container-overlay {
+             background-size: cover; 
           }
         }
         
-        /* 手機版（md 以下）：保持與桌機一致，hero 從頁面最上方開始，header 壓在 hero 圖上 */
         @media screen and (max-width: 767px) {
           .hero-wrapper {
-            margin-top: 0; /* 移除 margin-top，讓 hero 從頁面最上方開始 */
+            margin-top: 0; 
           }
           .hero-container-base,
-          .hero-container-active {
-             background-size: cover !important; /* 覆蓋 1024px 媒體查詢中的 100% 100% */
+          .hero-container-overlay {
+             background-size: cover !important; 
           }
         }
         
-        /* 橫向手機和平板保持全屏 */
         @media screen and (max-width: 1024px) and (orientation: landscape) {
           .hero-wrapper {
             height: 100dvh !important;
@@ -202,8 +191,8 @@ export default function Hero() {
             aspect-ratio: unset !important;
           }
           .hero-container-base,
-          .hero-container-active {
-             background-size: cover !important; /* 確保橫向時使用 cover */
+          .hero-container-overlay {
+             background-size: cover !important; 
           }
         }
       `}</style>
