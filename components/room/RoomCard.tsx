@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -9,14 +10,54 @@ type RoomCardProps = {
   desc: string;
   image: string;
   features?: string[];
+  priority?: boolean;
 };
 
-export default function RoomCard({ slug, title, desc, image, features = [] }: RoomCardProps) {
+export default function RoomCard({ slug, title, desc, image, features = [], priority = false }: RoomCardProps) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // 檢查圖片是否已在快取中
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => {
+      setImageLoaded(true);
+    };
+    img.onerror = () => {
+      // 即使載入失敗也標記為已載入，避免永遠不顯示
+      setImageLoaded(true);
+    };
+    
+    // 如果圖片已經在快取中，立即標記為已載入
+    if (img.complete && img.naturalWidth > 0) {
+      setImageLoaded(true);
+    } else {
+      img.src = image;
+    }
+  }, [image]);
+
   return (
     <>
       <div className="room-card">
-        <div className="room-card-image-wrapper">
-          <Image src={image} alt={title} fill className="room-card-image" />
+        <div 
+          className="room-card-image-wrapper"
+          style={{
+            backgroundColor: imageLoaded ? "transparent" : "#f5f5f5",
+            transition: "background-color 0.2s ease-in-out",
+          }}
+        >
+          <Image 
+            src={image} 
+            alt={title} 
+            fill 
+            className="room-card-image"
+            priority={priority}
+            loading={priority ? "eager" : "lazy"}
+            onLoadingComplete={() => setImageLoaded(true)}
+            style={{
+              opacity: imageLoaded ? 1 : 0,
+              transition: "opacity 0.2s ease-in-out",
+            }}
+          />
           <div className="room-card-gradient" />
         </div>
         <div className="room-card-content">
@@ -54,7 +95,7 @@ export default function RoomCard({ slug, title, desc, image, features = [] }: Ro
           position: relative;
           width: 100%;
           aspect-ratio: 16 / 9;
-          background-color: #f5f5f5;
+          overflow: hidden;
         }
 
         .room-card-image {

@@ -1,10 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
 import RoomCard from "@/components/room/RoomCard";
 import { getAllRooms } from "@/lib/room";
 
 export default function RoomsPage() {
   const rooms = getAllRooms();
+
+  // 頁面載入時立即預載入所有圖片
+  useEffect(() => {
+    rooms.forEach((room) => {
+      const img = new Image();
+      img.src = room.image;
+    });
+  }, [rooms]);
 
   return (
     <>
@@ -13,7 +22,7 @@ export default function RoomsPage() {
           <h1 className="rooms-page-title">房型介紹</h1>
           <p className="rooms-page-subtitle">挑選最適合你的雲朵小窩。</p>
           <div className="rooms-page-grid">
-            {rooms.map((r) => (
+            {rooms.map((r, index) => (
               <RoomCard
                 key={r.slug}
                 slug={r.slug}
@@ -21,6 +30,7 @@ export default function RoomsPage() {
                 desc={r.desc}
                 image={r.image}
                 features={r.features}
+                priority={index < 6} // 所有圖片都優先載入（通常不會超過6張）
               />
             ))}
           </div>

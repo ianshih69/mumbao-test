@@ -28,6 +28,70 @@ export default function RoomList() {
   const [imageLoadedMap, setImageLoadedMap] = useState<Record<string, boolean>>(
     {}
   );
+  const [autoplayEnabled, setAutoplayEnabled] = useState(false);
+  const autoplayCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // 檢查指定索引的圖片是否已載入
+  const checkImagesLoaded = (index: number): boolean => {
+    const leftKey = `left-${index}`;
+    const rightKey = `right-${index}`;
+    const leftLoaded = imageLoadedMap[leftKey] ?? false;
+    const rightLoaded = imageLoadedMap[rightKey] ?? false;
+    return leftLoaded && rightLoaded;
+  };
+
+  // 獲取下一張的索引（考慮 loop）
+  const getNextIndex = (currentIndex: number): number => {
+    return (currentIndex + 1) % roomImageGroups.length;
+  };
+
+  // 等待圖片載入完成後繼續 autoplay
+  const waitForImagesAndResume = (targetIndex: number) => {
+    // 清除之前的 interval
+    if (autoplayCheckIntervalRef.current) {
+      clearInterval(autoplayCheckIntervalRef.current);
+      autoplayCheckIntervalRef.current = null;
+    }
+
+    // 如果圖片已載入，直接繼續
+    if (checkImagesLoaded(targetIndex)) {
+      if (swiperInstance) {
+        swiperInstance.autoplay?.start();
+        setAutoplayEnabled(true);
+      }
+      return;
+    }
+
+    // 輪詢檢查圖片是否已載入（最多等待 10 秒）
+    let attempts = 0;
+    const maxAttempts = 100; // 100 * 100ms = 10 秒
+    const checkInterval = setInterval(() => {
+      attempts++;
+      if (checkImagesLoaded(targetIndex) || attempts >= maxAttempts) {
+        if (autoplayCheckIntervalRef.current) {
+          clearInterval(autoplayCheckIntervalRef.current);
+          autoplayCheckIntervalRef.current = null;
+        }
+        if (swiperInstance) {
+          swiperInstance.autoplay?.start();
+          setAutoplayEnabled(true);
+        }
+      }
+    }, 100);
+    
+    // 保存 interval ID 以便清理
+    autoplayCheckIntervalRef.current = checkInterval;
+  };
+
+  // 清理 interval
+  useEffect(() => {
+    return () => {
+      if (autoplayCheckIntervalRef.current) {
+        clearInterval(autoplayCheckIntervalRef.current);
+        autoplayCheckIntervalRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const preloadImages = () => {
@@ -88,6 +152,14 @@ export default function RoomList() {
 
     preloadImages();
   }, []);
+
+  // 當第一張圖片載入完成後，啟動 autoplay
+  useEffect(() => {
+    if (checkImagesLoaded(0) && swiperInstance && !autoplayEnabled) {
+      swiperInstance.autoplay?.start();
+      setAutoplayEnabled(true);
+    }
+  }, [imageLoadedMap, swiperInstance, autoplayEnabled]);
 
   useEffect(() => {
     dotsRef.current.forEach((dot, i) => {
@@ -201,10 +273,14 @@ export default function RoomList() {
               grabCursor={true}
               speed={600}
               watchSlidesProgress={true}
-              autoplay={{
-                delay: 3000,
-                disableOnInteraction: false,
-              }}
+              autoplay={
+                autoplayEnabled
+                  ? {
+                      delay: 3000,
+                      disableOnInteraction: false,
+                    }
+                  : false
+              }
               pagination={{
                 el: ".room-list-swiper-pagination",
                 clickable: true,
@@ -217,6 +293,29 @@ export default function RoomList() {
               }}
               onSlideChange={(swiper) => {
                 setActiveIndex(swiper.realIndex);
+                
+                // 切換後檢查下一張圖片是否已載入
+                const nextIndex = getNextIndex(swiper.realIndex);
+                if (!checkImagesLoaded(nextIndex)) {
+                  // 如果下一張圖片未載入，暫停 autoplay
+                  swiper.autoplay?.stop();
+                  setAutoplayEnabled(false);
+                  // 等待圖片載入完成後再繼續
+                  waitForImagesAndResume(nextIndex);
+                }
+              }}
+              onAutoplayTimeLeft={(swiper, timeLeft, percentage) => {
+                // 在 autoplay 即將觸發前（剩餘 200ms 時）檢查下一張圖片
+                if (timeLeft < 200 && autoplayEnabled) {
+                  const nextIndex = getNextIndex(swiper.realIndex);
+                  if (!checkImagesLoaded(nextIndex)) {
+                    // 如果下一張圖片未載入，暫停 autoplay
+                    swiper.autoplay?.stop();
+                    setAutoplayEnabled(false);
+                    // 等待圖片載入完成後再繼續
+                    waitForImagesAndResume(nextIndex);
+                  }
+                }
               }}
               className="room-list-swiper"
             >
