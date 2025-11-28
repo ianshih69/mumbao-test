@@ -27,7 +27,6 @@ export default function Hero() {
   useEffect(() => {
     if (heroImages.length <= 1) return;
 
-    let fadeTimer: NodeJS.Timeout;
     let resetTimer: NodeJS.Timeout;
     let bufferTimer: NodeJS.Timeout;
 
@@ -60,7 +59,6 @@ export default function Hero() {
 
     return () => {
       clearInterval(loopTimer);
-      clearTimeout(fadeTimer);
       clearTimeout(resetTimer);
       clearTimeout(bufferTimer);
     };
@@ -90,11 +88,11 @@ export default function Hero() {
   if (!heroImages.length) return null;
 
   return (
-    <div
+      <div
       className="hero-wrapper relative"
-      style={{
-        "--img-ratio": imageRatio.toString(),
-      } as React.CSSProperties}
+        style={{
+                "--img-ratio": imageRatio.toString(),
+        } as React.CSSProperties}
     >
       {/* 層 1: 底層 (Base) */}
       <div
@@ -144,7 +142,7 @@ export default function Hero() {
         }
 
         .hero-container-base {
-          z-index: 1; 
+          z-index: 1;
         }
         
         .hero-container-overlay {
@@ -165,7 +163,7 @@ export default function Hero() {
             min-height: 100dvh;
             aspect-ratio: 1 / var(--img-ratio, 1.5);
             /* 允許高度彈性 */
-            min-height: 0; 
+            min-height: 0;
           }
 
           .hero-container-base,
