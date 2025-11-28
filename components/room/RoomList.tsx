@@ -30,6 +30,7 @@ export default function RoomList() {
   );
   const [autoplayEnabled, setAutoplayEnabled] = useState(false);
   const autoplayCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   // 檢查指定索引的圖片是否已載入
   const checkImagesLoaded = (index: number): boolean => {
@@ -45,8 +46,11 @@ export default function RoomList() {
     return (currentIndex + 1) % roomImageGroups.length;
   };
 
-  // 等待圖片載入完成後繼續 autoplay
+  // 等待圖片載入完成後繼續 autoplay（僅手機版）
   const waitForImagesAndResume = (targetIndex: number) => {
+    // 只在手機版執行
+    if (!isMobile) return;
+
     // 清除之前的 interval
     if (autoplayCheckIntervalRef.current) {
       clearInterval(autoplayCheckIntervalRef.current);
@@ -82,6 +86,20 @@ export default function RoomList() {
     // 保存 interval ID 以便清理
     autoplayCheckIntervalRef.current = checkInterval;
   };
+
+  // 檢測是否為手機版
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 767);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   // 清理 interval
   useEffect(() => {
@@ -153,13 +171,23 @@ export default function RoomList() {
     preloadImages();
   }, []);
 
-  // 當第一張圖片載入完成後，啟動 autoplay
+  // 啟動 autoplay
   useEffect(() => {
-    if (checkImagesLoaded(0) && swiperInstance && !autoplayEnabled) {
+    if (!swiperInstance || autoplayEnabled) return;
+
+    // 手機版：等待第一張圖片載入完成後才啟動
+    // 桌機版：直接啟動
+    if (isMobile) {
+      if (checkImagesLoaded(0)) {
+        swiperInstance.autoplay?.start();
+        setAutoplayEnabled(true);
+      }
+    } else {
+      // 桌機版直接啟動
       swiperInstance.autoplay?.start();
       setAutoplayEnabled(true);
     }
-  }, [imageLoadedMap, swiperInstance, autoplayEnabled]);
+  }, [imageLoadedMap, swiperInstance, autoplayEnabled, isMobile]);
 
   useEffect(() => {
     dotsRef.current.forEach((dot, i) => {
@@ -294,19 +322,21 @@ export default function RoomList() {
               onSlideChange={(swiper) => {
                 setActiveIndex(swiper.realIndex);
                 
-                // 切換後檢查下一張圖片是否已載入
-                const nextIndex = getNextIndex(swiper.realIndex);
-                if (!checkImagesLoaded(nextIndex)) {
-                  // 如果下一張圖片未載入，暫停 autoplay
-                  swiper.autoplay?.stop();
-                  setAutoplayEnabled(false);
-                  // 等待圖片載入完成後再繼續
-                  waitForImagesAndResume(nextIndex);
+                // 手機版：切換後檢查下一張圖片是否已載入
+                if (isMobile) {
+                  const nextIndex = getNextIndex(swiper.realIndex);
+                  if (!checkImagesLoaded(nextIndex)) {
+                    // 如果下一張圖片未載入，暫停 autoplay
+                    swiper.autoplay?.stop();
+                    setAutoplayEnabled(false);
+                    // 等待圖片載入完成後再繼續
+                    waitForImagesAndResume(nextIndex);
+                  }
                 }
               }}
               onAutoplayTimeLeft={(swiper, timeLeft, percentage) => {
-                // 在 autoplay 即將觸發前（剩餘 200ms 時）檢查下一張圖片
-                if (timeLeft < 200 && autoplayEnabled) {
+                // 手機版：在 autoplay 即將觸發前（剩餘 200ms 時）檢查下一張圖片
+                if (isMobile && timeLeft < 200 && autoplayEnabled) {
                   const nextIndex = getNextIndex(swiper.realIndex);
                   if (!checkImagesLoaded(nextIndex)) {
                     // 如果下一張圖片未載入，暫停 autoplay
@@ -336,6 +366,26 @@ export default function RoomList() {
                           loading="eager"
                           decoding="async"
                           className="room-list-image"
+                          onLoad={() => {
+                            // 手機版：追蹤圖片載入狀態
+                            if (isMobile) {
+                              setImageLoadedMap((prev) => ({ ...prev, [leftKey]: true }));
+                            }
+                          }}
+                          onError={() => {
+                            // 手機版：即使載入失敗也標記為已載入
+                            if (isMobile) {
+                              setImageLoadedMap((prev) => ({ ...prev, [leftKey]: true }));
+                            }
+                          }}
+                          style={
+                            isMobile
+                              ? {
+                                  opacity: leftLoaded ? 1 : 0,
+                                  transition: "opacity 0.3s ease-in-out",
+                                }
+                              : undefined
+                          }
                         />
                       </div>
                       {/* 右圖 */}
@@ -346,6 +396,26 @@ export default function RoomList() {
                           loading="eager"
                           decoding="async"
                           className="room-list-image"
+                          onLoad={() => {
+                            // 手機版：追蹤圖片載入狀態
+                            if (isMobile) {
+                              setImageLoadedMap((prev) => ({ ...prev, [rightKey]: true }));
+                            }
+                          }}
+                          onError={() => {
+                            // 手機版：即使載入失敗也標記為已載入
+                            if (isMobile) {
+                              setImageLoadedMap((prev) => ({ ...prev, [rightKey]: true }));
+                            }
+                          }}
+                          style={
+                            isMobile
+                              ? {
+                                  opacity: rightLoaded ? 1 : 0,
+                                  transition: "opacity 0.3s ease-in-out",
+                                }
+                              : undefined
+                          }
                         />
                       </div>
                     </div>
