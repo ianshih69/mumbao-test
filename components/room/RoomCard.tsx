@@ -18,7 +18,7 @@ export default function RoomCard({ slug, title, desc, image, features = [], prio
 
   // 檢查圖片是否已在快取中
   useEffect(() => {
-    const img = new Image();
+    const img = document.createElement('img');
     img.onload = () => {
       setImageLoaded(true);
     };
