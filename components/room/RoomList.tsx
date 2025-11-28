@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, EffectFade } from "swiper/modules"; // ★ 多加 EffectFade
@@ -25,67 +25,20 @@ export default function RoomList() {
     elementRef: sectionRef,
   });
 
-  const [imageLoadedMap, setImageLoadedMap] = useState<Record<string, boolean>>(
-    {}
-  );
   const [autoplayEnabled, setAutoplayEnabled] = useState(false);
-  const autoplayCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const scrollResumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isScrollingRef = useRef(false);
 
-  // 檢查指定索引的圖片是否已載入
-  const checkImagesLoaded = (index: number): boolean => {
-    const leftKey = `left-${index}`;
-    const rightKey = `right-${index}`;
-    const leftLoaded = imageLoadedMap[leftKey] ?? false;
-    const rightLoaded = imageLoadedMap[rightKey] ?? false;
-    return leftLoaded && rightLoaded;
-  };
-
-  // 獲取下一張的索引（考慮 loop）
-  const getNextIndex = (currentIndex: number): number => {
-    return (currentIndex + 1) % roomImageGroups.length;
-  };
-
-  // 等待圖片載入完成後繼續 autoplay（僅手機版）
-  const waitForImagesAndResume = (targetIndex: number) => {
-    // 只在手機版執行
-    if (!isMobile) return;
-
-    // 清除之前的 interval
-    if (autoplayCheckIntervalRef.current) {
-      clearInterval(autoplayCheckIntervalRef.current);
-      autoplayCheckIntervalRef.current = null;
+  // 重新啟動 autoplay（手機版專用）
+  const resumeAutoplay = useCallback(() => {
+    if (swiperInstance && isMobile && autoplayEnabled) {
+      // 停止當前的 autoplay
+      swiperInstance.autoplay?.stop();
+      // 重新啟動 autoplay，會重新計數 3 秒
+      swiperInstance.autoplay?.start();
     }
-
-    // 如果圖片已載入，直接繼續
-    if (checkImagesLoaded(targetIndex)) {
-      if (swiperInstance) {
-        swiperInstance.autoplay?.start();
-        setAutoplayEnabled(true);
-      }
-      return;
-    }
-
-    // 輪詢檢查圖片是否已載入（最多等待 10 秒）
-    let attempts = 0;
-    const maxAttempts = 100; // 100 * 100ms = 10 秒
-    const checkInterval = setInterval(() => {
-      attempts++;
-      if (checkImagesLoaded(targetIndex) || attempts >= maxAttempts) {
-        if (autoplayCheckIntervalRef.current) {
-          clearInterval(autoplayCheckIntervalRef.current);
-          autoplayCheckIntervalRef.current = null;
-        }
-        if (swiperInstance) {
-          swiperInstance.autoplay?.start();
-          setAutoplayEnabled(true);
-        }
-      }
-    }, 100);
-    
-    // 保存 interval ID 以便清理
-    autoplayCheckIntervalRef.current = checkInterval;
-  };
+  }, [swiperInstance, isMobile, autoplayEnabled]);
 
   // 檢測是否為手機版
   useEffect(() => {
@@ -101,93 +54,62 @@ export default function RoomList() {
     };
   }, []);
 
-  // 清理 interval
+  // 清理 timer
   useEffect(() => {
     return () => {
-      if (autoplayCheckIntervalRef.current) {
-        clearInterval(autoplayCheckIntervalRef.current);
-        autoplayCheckIntervalRef.current = null;
+      if (scrollResumeTimerRef.current) {
+        clearTimeout(scrollResumeTimerRef.current);
+        scrollResumeTimerRef.current = null;
       }
     };
   }, []);
 
+  // 手機版：監聽頁面滾動，滾動時暫停 autoplay
   useEffect(() => {
-    const preloadImages = () => {
-      roomImageGroups.forEach((group, index) => {
-        const leftKey = `left-${index}`;
-        const rightKey = `right-${index}`;
+    if (!isMobile) return;
 
-        const leftImg = new window.Image();
-        let leftLoaded = false;
-        leftImg.onload = () => {
-          if (!leftLoaded) {
-            leftLoaded = true;
-            setImageLoadedMap((prev) => ({ ...prev, [leftKey]: true }));
-          }
-        };
-        leftImg.onerror = () => {
-          if (!leftLoaded) {
-            leftLoaded = true;
-            setImageLoadedMap((prev) => ({ ...prev, [leftKey]: true }));
-          }
-        };
-        leftImg.src = group.left;
+    const handleScroll = () => {
+      // 如果正在滾動，暫停 autoplay
+      if (!isScrollingRef.current && swiperInstance && autoplayEnabled) {
+        isScrollingRef.current = true;
+        swiperInstance.autoplay?.stop();
+      }
 
-        const rightImg = new window.Image();
-        let rightLoaded = false;
-        rightImg.onload = () => {
-          if (!rightLoaded) {
-            rightLoaded = true;
-            setImageLoadedMap((prev) => ({ ...prev, [rightKey]: true }));
-          }
-        };
-        rightImg.onerror = () => {
-          if (!rightLoaded) {
-            rightLoaded = true;
-            setImageLoadedMap((prev) => ({ ...prev, [rightKey]: true }));
-          }
-        };
-        rightImg.src = group.right;
+      // 清除之前的恢復計時器
+      if (scrollResumeTimerRef.current) {
+        clearTimeout(scrollResumeTimerRef.current);
+        scrollResumeTimerRef.current = null;
+      }
 
-        if (leftImg.complete && leftImg.naturalWidth > 0) {
-          setTimeout(() => {
-            if (!leftLoaded) {
-              leftLoaded = true;
-              setImageLoadedMap((prev) => ({ ...prev, [leftKey]: true }));
-            }
-          }, 0);
-        }
-        if (rightImg.complete && rightImg.naturalWidth > 0) {
-          setTimeout(() => {
-            if (!rightLoaded) {
-              rightLoaded = true;
-              setImageLoadedMap((prev) => ({ ...prev, [rightKey]: true }));
-            }
-          }, 0);
-        }
-      });
+      // 停止滾動後 0.5 秒，重新啟動 autoplay（會重新計數 3 秒）
+      scrollResumeTimerRef.current = setTimeout(() => {
+        isScrollingRef.current = false;
+        resumeAutoplay();
+      }, 500);
     };
 
-    preloadImages();
-  }, []);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('touchmove', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('touchmove', handleScroll);
+      if (scrollResumeTimerRef.current) {
+        clearTimeout(scrollResumeTimerRef.current);
+        scrollResumeTimerRef.current = null;
+      }
+    };
+  }, [isMobile, swiperInstance, autoplayEnabled, resumeAutoplay]);
+
 
   // 啟動 autoplay
   useEffect(() => {
     if (!swiperInstance || autoplayEnabled) return;
 
-    // 手機版：等待第一張圖片載入完成後才啟動
-    // 桌機版：直接啟動
-    if (isMobile) {
-      if (checkImagesLoaded(0)) {
-        swiperInstance.autoplay?.start();
-        setAutoplayEnabled(true);
-      }
-    } else {
-      // 桌機版直接啟動
-      swiperInstance.autoplay?.start();
-      setAutoplayEnabled(true);
-    }
-  }, [imageLoadedMap, swiperInstance, autoplayEnabled, isMobile]);
+    // 直接啟動 autoplay（桌機和手機都一樣）
+    swiperInstance.autoplay?.start();
+    setAutoplayEnabled(true);
+  }, [swiperInstance, autoplayEnabled]);
 
   useEffect(() => {
     dotsRef.current.forEach((dot, i) => {
@@ -322,39 +244,14 @@ export default function RoomList() {
               onSlideChange={(swiper) => {
                 setActiveIndex(swiper.realIndex);
                 
-                // 手機版：切換後檢查下一張圖片是否已載入
-                if (isMobile) {
-                  const nextIndex = getNextIndex(swiper.realIndex);
-                  if (!checkImagesLoaded(nextIndex)) {
-                    // 如果下一張圖片未載入，暫停 autoplay
-                    swiper.autoplay?.stop();
-                    setAutoplayEnabled(false);
-                    // 等待圖片載入完成後再繼續
-                    waitForImagesAndResume(nextIndex);
-                  }
-                }
-              }}
-              onAutoplayTimeLeft={(swiper, timeLeft, percentage) => {
-                // 手機版：在 autoplay 即將觸發前（剩餘 200ms 時）檢查下一張圖片
-                if (isMobile && timeLeft < 200 && autoplayEnabled) {
-                  const nextIndex = getNextIndex(swiper.realIndex);
-                  if (!checkImagesLoaded(nextIndex)) {
-                    // 如果下一張圖片未載入，暫停 autoplay
-                    swiper.autoplay?.stop();
-                    setAutoplayEnabled(false);
-                    // 等待圖片載入完成後再繼續
-                    waitForImagesAndResume(nextIndex);
-                  }
+                // 手機版：手動換頁後，恢復 autoplay（會重新計數 3 秒）
+                if (isMobile && autoplayEnabled) {
+                  resumeAutoplay();
                 }
               }}
               className="room-list-swiper"
             >
               {roomImageGroups.map((g, i) => {
-                const leftKey = `left-${i}`;
-                const rightKey = `right-${i}`;
-                const leftLoaded = imageLoadedMap[leftKey] ?? false;
-                const rightLoaded = imageLoadedMap[rightKey] ?? false;
-
                 return (
                   <SwiperSlide key={i} className="room-list-slide">
                     <div className="room-list-grid">
@@ -366,26 +263,6 @@ export default function RoomList() {
                           loading="eager"
                           decoding="async"
                           className="room-list-image"
-                          onLoad={() => {
-                            // 手機版：追蹤圖片載入狀態
-                            if (isMobile) {
-                              setImageLoadedMap((prev) => ({ ...prev, [leftKey]: true }));
-                            }
-                          }}
-                          onError={() => {
-                            // 手機版：即使載入失敗也標記為已載入
-                            if (isMobile) {
-                              setImageLoadedMap((prev) => ({ ...prev, [leftKey]: true }));
-                            }
-                          }}
-                          style={
-                            isMobile
-                              ? {
-                                  opacity: leftLoaded ? 1 : 0,
-                                  transition: "opacity 0.3s ease-in-out",
-                                }
-                              : undefined
-                          }
                         />
                       </div>
                       {/* 右圖 */}
@@ -396,26 +273,6 @@ export default function RoomList() {
                           loading="eager"
                           decoding="async"
                           className="room-list-image"
-                          onLoad={() => {
-                            // 手機版：追蹤圖片載入狀態
-                            if (isMobile) {
-                              setImageLoadedMap((prev) => ({ ...prev, [rightKey]: true }));
-                            }
-                          }}
-                          onError={() => {
-                            // 手機版：即使載入失敗也標記為已載入
-                            if (isMobile) {
-                              setImageLoadedMap((prev) => ({ ...prev, [rightKey]: true }));
-                            }
-                          }}
-                          style={
-                            isMobile
-                              ? {
-                                  opacity: rightLoaded ? 1 : 0,
-                                  transition: "opacity 0.3s ease-in-out",
-                                }
-                              : undefined
-                          }
                         />
                       </div>
                     </div>
